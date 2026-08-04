@@ -1,0 +1,13 @@
+client_id,client_name,region,country,industry,tier,account_manager,onboarded_date
+C001,  Northwind Managed IT  ,UK,GB,Managed Services,Strategic,A. Kapoor,2019-01-25
+C002,  Helix Cloud Services  ,UK,GB,Cloud & Hosting,Strategic,A. Kapoor,2020-03-12
+C003,  Aegis Technology Group  ,Europe,DE,Cybersecurity,Strategic,M. Rossi,22/10/2018
+C004,  Ironclad Networks  ,US,US,Managed Services,Strategic,J. Chen,"Sep 19, 2019"
+C005,  Vertex Digital  ,US,US,Digital Agency,GROWTH ,J. Chen,"May 13, 2019"
+C006,  BlueHarbor Systems  ,UK,GB,Fintech,Growth,S. Patel,"Dec 10, 2022"
+C007,  Cumulus MSP  ,Europe,NL,Managed Services,Growth,M. Rossi,2020-12-18
+C008,  Meridian IT Partners  ,UK,GB,Professional Svcs,GROWTH ,S. Patel,2020-10-22
+C009,  Quanta Infocare  ,APAC,IN,IT Services,Growth,R. Nair,28/12/2020
+C010,  Solstice Managed Svcs  ,APAC,AU,Retail Tech,Smb ,R. Nair,"May 18, 2022"
+C011,  Pinnacle Support Co  ,UK,GB,Healthcare IT,Smb ,S. Patel,28/09/2019
+C012,  Orbit Technology  ,Europe,FR,Education Tech,SMB,M. Rossi,2018-10-19

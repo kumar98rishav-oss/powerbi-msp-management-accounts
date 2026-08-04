@@ -6,6 +6,16 @@ A management-accounts and financial-analytics dashboard for a **Managed Service 
 
 ---
 
+## 🖼️ Preview
+
+| Executive Summary | P&L / Management Accounts | Profitability & Margin |
+|:---:|:---:|:---:|
+| ![Executive Summary](screenshots/01-executive-summary.png) | ![P&L](screenshots/02-pnl.png) | ![Profitability](screenshots/03-profitability.png) |
+| **Client Profitability** | **Utilisation** | **Balance Sheet & Cash** |
+| ![Client Profitability](screenshots/04-client-profitability.png) | ![Utilisation](screenshots/05-utilisation.png) | ![Balance Sheet](screenshots/06-balance-sheet.png) |
+
+---
+
 ## 📊 What it does
 It unifies the three things an MSP finance team cares about into one governed **star-schema** model:
 
@@ -37,13 +47,13 @@ Single-direction relationships, a conformed date dimension, and no fact-to-fact 
 - **Time intelligence** — YoY, MoM, fiscal YTD, rolling 12-month (LTM), and a 3-month moving average.
 
 ## ▶️ How to run
+The synthetic data is included in the **`/data`** folder, so the report is fully reproducible.
+
 1. Clone this repo.
-2. Place the CSV source files in a folder, and set the **`pFolder`** parameter to that folder path.
-3. Open **`MSP Management Accounts.pbip`** in Power BI Desktop (Dec 2023 or later).
+2. Open **`MSP Management Accounts.pbip`** in Power BI Desktop (Dec 2023 or later).
+3. Set the **`pFolder`** parameter to the path of the **`data`** folder in your clone — *Home → Transform data → `pFolder` → Current Value* — then **Refresh**.
 
-Expected source files: `income_statement_wide.csv`, `resource_billing_2023/2024/2025.csv`, `balance_sheet_quarterly_wide.csv`, `clients.csv`, `service_lines.csv`, `targets_long.csv`, `fx_rates.csv`, `chart_of_accounts.csv`.
-
-*(The synthetic CSVs are not committed to keep the repo focused on the model and report definition.)*
+Source files (in `/data`): `income_statement_wide.csv`, `billing/resource_billing_2023–2025.csv`, `balance_sheet_quarterly_wide.csv`, `clients.csv`, `service_lines.csv`, `targets_long.csv`, `fx_rates.csv`, `chart_of_accounts.csv`.
 
 ## 🛠️ Built with
 Power BI Desktop · PBIP project format · TMDL semantic model · DAX · Power Query (M)

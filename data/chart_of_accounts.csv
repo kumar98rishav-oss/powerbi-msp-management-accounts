@@ -1,0 +1,14 @@
+Line_Item,Account_Code,Category,Is_COGS,Is_OPEX,Is_EBITDA_Item
+Recurring Managed Services  ,4010,Revenue,0,0,1
+Projects & Consultancy,4020,Revenue,0,0,1
+other income ,4090,Revenue,0,0,1
+Engineer Salaries (India),5010,Cost of Delivery,1,0,1
+"Tools, Licences & RMM  ",5020,Cost of Delivery,1,0,1
+Connectivity & Infrastructure,5030,Cost of Delivery,1,0,1
+sales & marketing ,6010,Operating Expenses,0,1,1
+general & administrative ,6020,Operating Expenses,0,1,1
+ TECHNOLOGY & PLATFORM,6030,Operating Expenses,0,1,1
+recruitment & training ,6040,Operating Expenses,0,1,1
+Depreciation & Amortisation,6900,Operating Expenses,0,1,0
+ INTEREST EXPENSE,7010,Other,0,0,0
+ CORPORATION TAX,7020,Other,0,0,0

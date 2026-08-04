@@ -1,0 +1,8 @@
+service_code,service_line,category,standard_bill_rate_gbp,loaded_cost_inr,target_gross_margin
+HD,Helpdesk 24x7,Managed Support,22,95000,0.64
+NOC,Network Ops (NOC),Managed Support,28,120000,0.63
+SOC,Security Ops (SOC),Security,42,190000,0.66
+CLD,Azure Cloud,Cloud,48,210000,0.61
+DEV,Software Development,Engineering,45,200000,0.55
+AUT,Automation,Engineering,52,220000,0.64
+OFP,Office Professionals,Business Support,16,70000,0.6

@@ -1,0 +1,377 @@
+table _Measures
+	lineageTag: bd2a1128-f52a-4381-8cb7-d4a922d9c4b8
+
+	measure 'Cost (GBP)' = SUM ( fct_Billing[CostGBP] )
+		formatString: "£"#,##0
+		displayFolder: 1 Base Measures
+		lineageTag: 2844446c-80c8-469c-988d-02a464045383
+
+	measure 'Billable Hours' = SUM ( fct_Billing[BillableHours] )
+		formatString: #,##0.0
+		displayFolder: 1 Base Measures
+		lineageTag: 9f2e439c-bd3d-44bb-bfa5-e21c6ee6af40
+
+	measure 'Capacity Hours' = SUM ( fct_Billing[CapacityHours] )
+		formatString: #,##0.0
+		displayFolder: 1 Base Measures
+		lineageTag: b05c0d95-6b18-4487-bbf2-1031db0f6001
+
+	measure 'Revenue (P&L)' = CALCULATE ( SUM ( fct_pnl[Amount] ), fct_pnl[Category] = "Revenue" )
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		displayFolder: 1 Base Measures
+		lineageTag: fc06c32c-e6b6-473a-96a1-a9d10fbc19d8
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Cost of Delivery' = -CALCULATE ( SUM ( fct_pnl[Amount] ), fct_pnl[Category] = "Cost of Delivery" )
+		formatString: "£"#,##0
+		displayFolder: 1 Base Measures
+		lineageTag: 0dc89b6f-6bd8-4458-aabd-4a18e83343f8
+
+	measure 'Operating Expenses' = -CALCULATE ( SUM ( fct_pnl[Amount] ), fct_pnl[Category] = "Operating Expenses" )
+		formatString: "£"#,##0
+		displayFolder: 1 Base Measures
+		lineageTag: eeae1fd7-e676-486c-ab51-e37855580b75
+
+	measure 'Gross Profit (P&L)' = CALCULATE ( SUM ( fct_pnl[Amount] ), fct_pnl[Category] IN { "Revenue", "Cost of Delivery" } )
+		formatString: "£"#,##0
+		displayFolder: 2 Profitability
+		lineageTag: aa84e088-7eba-4f37-a734-5f03329bf1a6
+
+	measure 'Gross Margin % (P&L)' = DIVIDE ( [Gross Profit (P&L)], [Revenue (P&L)] )
+		formatString: 0.0%
+		displayFolder: 2 Profitability
+		lineageTag: 81d5903d-bd61-46dc-ae53-acba37993b40
+
+	measure 'COGS %' = DIVIDE ( [Cost of Delivery], [Revenue (P&L)] )
+		formatString: 0.0%
+		displayFolder: 2 Profitability
+		lineageTag: eee67e85-3243-4064-bf92-b68d5484c061
+
+	measure 'Operating Profit' = CALCULATE ( SUM ( fct_pnl[Amount] ), fct_pnl[Category] IN { "Revenue", "Cost of Delivery", "Operating Expenses" } )
+		formatString: "£"#,##0
+		displayFolder: 2 Profitability
+		lineageTag: 228c7580-58f2-4c31-8649-0209e155c222
+
+	measure 'Operating Margin %' = DIVIDE ( [Operating Profit], [Revenue (P&L)] )
+		formatString: 0.0%
+		displayFolder: 2 Profitability
+		lineageTag: 4aee1dd8-b8ed-4ce5-b05a-c007a689adca
+
+	measure EBITDA = CALCULATE ( SUM ( fct_pnl[Amount] ), NOT ( fct_pnl[Line_Item] IN { "Interest Expense", "Corporation Tax", "Depreciation & Amortisation" } ) )
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		displayFolder: 2 Profitability
+		lineageTag: 859ce0d2-839d-4d34-b011-227f777102e8
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'EBITDA %' = DIVIDE ( [EBITDA], [Revenue (P&L)] )
+		formatString: 0.0%
+		displayFolder: 2 Profitability
+		lineageTag: bd49ba00-9d34-468c-a5dd-537e619385b9
+
+	measure 'Net Profit' = SUM ( fct_pnl[Amount] )
+		formatString: "£"#,##0
+		displayFolder: 2 Profitability
+		lineageTag: 26152711-c790-49ad-8e52-a10dff8930bd
+
+	measure 'Net Margin %' = DIVIDE ( [Net Profit], [Revenue (P&L)] )
+		formatString: 0.0%
+		displayFolder: 2 Profitability
+		lineageTag: 13f97e26-1fd1-4767-b982-3aaec78f9f4b
+
+	measure 'Utilisation %' = DIVIDE ( [Billable Hours], [Capacity Hours] )
+		formatString: 0.0%
+		displayFolder: 4 Utilisation
+		lineageTag: 920bf721-dda4-4796-8f95-90975142e042
+
+	measure 'Non-Billable Hours' = [Capacity Hours] - [Billable Hours]
+		formatString: #,##0.0
+		displayFolder: 4 Utilisation
+		lineageTag: f79b88fc-6fa9-4474-a2da-ef0aad8195d3
+
+	measure 'Cost per Hour (GBP)' = DIVIDE ( [Cost (GBP)], [Billable Hours] )
+		formatString: "£"#,##0.00
+		displayFolder: 4 Utilisation
+		lineageTag: b82801e5-df49-48ed-91e9-76b9a2e730af
+
+	measure 'Revenue Target' = CALCULATE ( SUM ( fct_target[target] ), fct_target[metric] = "revenue" )
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		displayFolder: 5 Targets & Variance
+		lineageTag: 8b3999d2-c9bf-4d43-926f-62a97f5a1ac8
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Revenue vs Target' = [Revenue (P&L)] - [Revenue Target]
+		formatString: "£"#,##0
+		displayFolder: 5 Targets & Variance
+		lineageTag: 174c4ff7-15ab-4116-8d81-aabae7a9b911
+
+	measure 'EBITDA Target' = CALCULATE ( SUM ( fct_target[target] ), fct_target[metric] = "EBITDA" )
+		formatString: "£"#,##0
+		displayFolder: 5 Targets & Variance
+		lineageTag: 75627c11-d284-4a5f-bbdb-71b7c046a327
+
+	measure 'EBITDA vs Target' = [EBITDA] - [EBITDA Target]
+		formatString: "£"#,##0
+		displayFolder: 5 Targets & Variance
+		lineageTag: d408a34d-d9cb-4cfb-8612-fdddb686309d
+
+	measure 'Net Profit Target' = CALCULATE ( SUM ( fct_target[target] ), fct_target[metric] = "net profit" )
+		formatString: "£"#,##0
+		displayFolder: 5 Targets & Variance
+		lineageTag: fa7aaa28-6efe-4c0a-986a-d573b549b1b6
+
+	measure 'Est Revenue (Billable Value)' = SUMX ( fct_Billing, fct_Billing[BillableHours] * RELATED ( dim_service[standard_bill_rate_gbp] ) )
+		formatString: "£"#,##0
+		displayFolder: 7 Allocation (client/service)
+		lineageTag: e460a6bf-5dd8-4c23-a9d9-4eb245fce911
+
+	measure 'Revenue (Allocated)' =
+			VAR Share = DIVIDE (
+			    [Est Revenue (Billable Value)],
+			    CALCULATE (
+			        [Est Revenue (Billable Value)],
+			        ALL ( dim_Client ),
+			        ALL ( dim_service )
+			    )
+			)
+			VAR FirmRevenue = CALCULATE (
+			    [Revenue (P&L)],
+			    ALL ( dim_Client ),
+			    ALL ( dim_service )
+			)
+			RETURN
+			    Share * FirmRevenue
+		formatString: "£"#,##0
+		displayFolder: 7 Allocation (client/service)
+		lineageTag: c2b73eb1-be97-4aac-9971-6cbfa68b4326
+
+	measure 'Cost (Allocated)' = VAR Share = DIVIDE ( SUM ( fct_Billing[CostGBP] ), CALCULATE ( SUM ( fct_Billing[CostGBP] ), ALL ( dim_Client ), ALL ( dim_service ) ) ) VAR FirmCost = CALCULATE ( [Cost of Delivery], ALL ( dim_Client ), ALL ( dim_service ) ) RETURN Share * FirmCost
+		formatString: "£"#,##0
+		displayFolder: 7 Allocation (client/service)
+		lineageTag: b3500948-1784-4076-b2b0-768680c05370
+
+	measure 'Gross Profit (Allocated)' = [Revenue (Allocated)] - [Cost (Allocated)]
+		formatString: "£"#,##0
+		displayFolder: 7 Allocation (client/service)
+		lineageTag: d6f0af18-a87d-4b59-906d-600d25c0b9a5
+
+	measure 'Gross Margin % (Allocated)' = DIVIDE ( [Gross Profit (Allocated)], [Revenue (Allocated)] )
+		formatString: 0.0%
+		displayFolder: 7 Allocation (client/service)
+		lineageTag: a97affb8-bbb1-4993-9a04-4b41fd35fc28
+
+	measure 'Revenue LTM' = ```
+			
+			CALCULATE ( [Revenue (P&L)], 
+			DATESINPERIOD ( dim_date[Date], 
+			MAX ( dim_date[Date] ), -12, MONTH ) )
+			```
+		formatString: "£"#,##0
+		displayFolder: 8 Balance Sheet
+		lineageTag: e4d7ff88-8451-4ef2-8a84-8861b9879d71
+
+	measure 'Service Target Margin' = AVERAGE ( dim_service[target_gross_margin] )
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: 10 Helper
+		lineageTag: f6e07a9c-4ef5-47f2-bf56-52ab7302b14e
+
+	measure 'GM vs Target Colour' = IF ( [Gross Margin % (Allocated)] >= [Service Target Margin], "#1A8F5A", "#C2921A" )
+		displayFolder: 10 Helper
+		lineageTag: dba9547f-62b9-4d4d-b7c9-88db047bd3bf
+
+	measure '% of Firm Revenue' = DIVIDE ( [Revenue (Allocated)], CALCULATE ( [Revenue (P&L)], ALL ( dim_Client ), ALL ( dim_service ) ) )
+		formatString: 0.0%
+		displayFolder: 7 Allocation (client/service)
+		lineageTag: 19d2a663-77ae-48f1-a6da-9e6e58391dd0
+
+	measure Revenue = [Revenue (Allocated)]
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		displayFolder: 1 Base Measures
+		lineageTag: bdea8a57-b7c9-47a2-909c-a8d7a17b1838
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Gross Profit' = [Gross Profit (Allocated)]
+		formatString: "£"#,##0
+		displayFolder: 2 Profitability
+		lineageTag: f5f12c47-1d94-4adb-9269-2f552ac13388
+
+	measure 'Gross Margin %' = [Gross Margin % (Allocated)]
+		formatString: 0.0%
+		displayFolder: 2 Profitability
+		lineageTag: 1d096812-1a8c-43ea-9e0e-0ed7f7d5e746
+
+	measure 'Effective Rate (GBP per hr)' = DIVIDE ( [Revenue (Allocated)], [Billable Hours] )
+		formatString: "£"#,##0.00
+		displayFolder: 4 Utilisation
+		lineageTag: 583ff8a5-fcbb-4b89-b6b3-53466cac6ff7
+
+	measure 'Cumulative Revenue' = CALCULATE ( [Revenue (P&L)], FILTER ( ALLSELECTED ( dim_date[Date] ), dim_date[Date] <= MAX ( dim_date[Date] ) ) )
+		formatString: "£"#,##0
+		displayFolder: 3 Time Intelligence
+		lineageTag: 224c067f-ae27-41e3-85c8-329b35b831e0
+
+	measure '% of Total Revenue' = DIVIDE ( [Revenue (Allocated)], CALCULATE ( [Revenue (Allocated)], ALL ( dim_Client ), ALL ( dim_service ) ) )
+		formatString: 0.0%
+		displayFolder: 6 Ranking & Share
+		lineageTag: d0959992-ac77-4cc1-a8ec-d9804d1531ff
+
+	measure '% of Selected Revenue' = DIVIDE ( [Revenue (Allocated)], CALCULATE ( [Revenue (Allocated)], ALLSELECTED ( dim_Client ), ALLSELECTED ( dim_service ) ) )
+		formatString: 0.0%
+		displayFolder: 6 Ranking & Share
+		lineageTag: 165d5727-1558-416e-a6f4-745c3a8ed5e9
+
+	measure 'Client Rank by Revenue' = RANKX ( ALL ( dim_Client ), [Revenue (Allocated)], , DESC, DENSE )
+		formatString: #,##0
+		displayFolder: 6 Ranking & Share
+		lineageTag: ba98d877-0ff9-4c56-8a38-f1b889c4ef3c
+
+	measure 'Top 5 Client Revenue' = CALCULATE ( [Revenue (Allocated)], KEEPFILTERS ( TOPN ( 5, ALL ( dim_Client ), [Revenue (Allocated)] ) ) )
+		formatString: "£"#,##0
+		displayFolder: 6 Ranking & Share
+		lineageTag: 50e1c825-7e5c-4757-982a-308cb62ed9bf
+
+	measure 'Working Capital' =
+			
+			VAR d =  MAX ( fct_bs[Quarter End Date] )
+			
+			RETURN
+			    CALCULATE (
+			        SUM ( fct_bs[amount] ),
+			        fct_bs[Quarter End Date] = d,
+			        fct_bs[Balance_Sheet_Item] IN { "Cash & Cash Equivalents", "Accounts Receivable", "Unbilled Revenue (WIP)", "Prepaid Expenses" }
+			    ) - CALCULATE (
+			        SUM ( fct_bs[amount] ),
+			        fct_bs[Quarter End Date] = d,
+			        fct_bs[Balance_Sheet_Item] IN { "Accounts Payable", "Accrued Salaries", "Deferred Revenue", "Accrued Liabilities" }
+			    )
+		formatString: "£"#,##0
+		displayFolder: 8 Balance Sheet
+		lineageTag: bd38af25-df71-4629-99dc-38a7541a7d9f
+
+	measure 'DSO (Days)' = DIVIDE ( [Accounts Receivable], DIVIDE ( [Revenue LTM], 365 ) )
+		formatString: #,##0
+		displayFolder: 8 Balance Sheet
+		lineageTag: 033eef5f-aa3b-4392-8c14-eda26ba13ee1
+
+	measure Cash = ```
+			
+			VAR d = CALCULATE ( MAX ( fct_bs[Quarter End Date] ), 
+			        KEEPFILTERS ( fct_bs[Balance_Sheet_Item] = "Cash & Cash Equivalents" ) ) 
+			        
+			RETURN 
+			CALCULATE ( SUM ( fct_bs[amount] ), 
+			fct_bs[Balance_Sheet_Item] = "Cash & Cash Equivalents", 
+			fct_bs[Quarter End Date] = d )
+			```
+		formatString: "£"#,##0
+		displayFolder: 8 Balance Sheet
+		lineageTag: 1245f835-6b3e-45f2-8735-15b0f6e6f69b
+
+	measure 'Accounts Receivable' = ```
+			
+			
+			VAR d = CALCULATE ( MAX ( fct_bs[Quarter End Date] ), 
+			KEEPFILTERS ( fct_bs[Balance_Sheet_Item] = "Accounts Receivable" ) ) 
+			
+			RETURN 
+			CALCULATE ( SUM ( fct_bs[amount] ), 
+			fct_bs[Balance_Sheet_Item] = "Accounts Receivable", 
+			fct_bs[Quarter End Date] = d )
+			```
+		formatString: "£"#,##0
+		displayFolder: 8 Balance Sheet
+		lineageTag: e12529cd-49a8-416e-b966-2f8bf475b2ea
+
+	measure 'Accounts Payable' = ```
+			
+			VAR d = CALCULATE ( MAX ( fct_bs[Quarter End Date] ), 
+			        KEEPFILTERS ( fct_bs[Balance_Sheet_Item] = "Accounts Payable" ) ) 
+			
+			RETURN 
+			CALCULATE ( SUM ( fct_bs[amount] ), 
+			fct_bs[Balance_Sheet_Item] = "Accounts Payable", 
+			fct_bs[Quarter End Date] = d )
+			```
+		formatString: "£"#,##0
+		displayFolder: 8 Balance Sheet
+		lineageTag: c8df4e10-6c1e-4c15-9592-f71889633f57
+
+	measure 'Deferred Revenue' = ```
+			
+			VAR d = CALCULATE ( MAX ( fct_bs[Quarter End Date] ), 
+			        KEEPFILTERS ( fct_bs[Balance_Sheet_Item] = "Deferred Revenue" ) ) 
+			
+			RETURN 
+			CALCULATE ( SUM ( fct_bs[amount] ), 
+			fct_bs[Balance_Sheet_Item] = "Deferred Revenue", 
+			fct_bs[Quarter End Date] = d )
+			```
+		formatString: "£"#,##0
+		displayFolder: 8 Balance Sheet
+		lineageTag: db7503dc-8d76-4b29-bef7-b2fb119ff1c0
+
+	measure 'Unbilled WIP' = ```
+			
+			VAR d = CALCULATE ( MAX ( fct_bs[Quarter End Date] ), 
+			        KEEPFILTERS ( fct_bs[Balance_Sheet_Item] = "Unbilled Revenue (WIP)" ) ) 
+			        
+			RETURN CALCULATE ( SUM ( fct_bs[amount] ), 
+			fct_bs[Balance_Sheet_Item] = "Unbilled Revenue (WIP)", 
+			fct_bs[Quarter End Date] = d )
+			```
+		formatString: "£"#,##0
+		displayFolder: 8 Balance Sheet
+		lineageTag: d97626b9-d256-49de-9ca2-d6af0b0ca7fc
+
+	measure 'Last Refreshed' = "As at " & FORMAT ( EOMONTH ( MAX ( fct_Billing[Date] ), 0 ), "dd mmm yyyy" )
+		lineageTag: 5de882d4-2693-4f61-b0d7-7f07b99a8324
+
+	measure 'Utilisation Caption' =
+			
+			FORMAT ( [Billable Hours] / 1000, "#,0" ) & "k billable of "
+			    & FORMAT ( [Capacity Hours] / 1000, "#,0" ) & "k capacity hrs"
+		formatString: …, "#,0"
+		displayFolder: 4 Utilisation
+		lineageTag: 917d724c-89dd-4818-95b0-60d38cafa934
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	measure '% of Revenue' = DIVIDE ( [Pnl Amount], CALCULATE ( [Revenue (P&L)], REMOVEFILTERS ( fct_pnl[Category], fct_pnl[Line_Item] ) ) )
+		formatString: 0.0%
+		displayFolder: 2 Profitability
+		lineageTag: 68fe4646-8ba5-4891-8c07-37c0e6988661
+
+	measure 'Utilisation Target' = 0.85
+		formatString: 0.0%
+		displayFolder: 4 Utilisation
+		lineageTag: 243f3292-45c3-4e30-b7ce-a9569baf2c2d
+
+	measure 'Pnl Amount' = sum(fct_pnl[Amount])
+		formatString: 0
+		displayFolder: 1 Base Measures
+		lineageTag: 0c291840-f63b-4d0c-9f8f-f6a57af75ec4
+
+	measure 'Avg 3M rolling' = AVERAGEX(DATESINPERIOD(dim_date[Date],MAX(dim_date[Date]),-3,MONTH),[Revenue (Allocated)])
+		displayFolder: 3 Time Intelligence
+		lineageTag: ad27ac67-0b64-4ff3-9901-17a68b8a9a51
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Margin Variance' = [Service Target Margin]-[Gross Margin % (Allocated)]
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: 7 Allocation (client/service)
+		lineageTag: 311bbcf4-96eb-44a2-97b1-52ae916fd6d5
+
+	column Value
+		isHidden
+		displayFolder: 10 Helper
+		lineageTag: 113e2026-b111-4cee-90eb-9ec0bbd0b434
+		isNameInferred
+		sourceColumn: [Value]
+
+	partition _Measures = calculated
+		source = {BLANK()}
+

@@ -1,0 +1,20 @@
+table dim_PnLCategory
+	isHidden
+	lineageTag: d0ad6201-43ff-4a76-8679-59189e3dcae0
+
+	column 'PnL Category (ordered)'
+		dataType: string
+		isHidden
+		lineageTag: 58e4ee94-b472-4ba1-947d-e2231adbb19f
+		sourceColumn: [Category]
+		sortByColumn: CategoryOrder
+
+	column CategoryOrder
+		dataType: int64
+		isHidden
+		lineageTag: 0b140564-4377-4b94-9f2a-cf2604ea7459
+		sourceColumn: [CategoryOrder]
+
+	partition dim_PnLCategory = calculated
+		source = DATATABLE("Category",STRING,"CategoryOrder",INTEGER,{{"Revenue",1},{"Cost of Delivery",2},{"Operating Expenses",3},{"Other",4}})
+

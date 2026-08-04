@@ -1,0 +1,153 @@
+table dim_date
+	lineageTag: 126c1a48-4016-426a-8333-760002562f2f
+	dataCategory: Time
+
+	column Date
+		isKey
+		formatString: mmmm yyyy
+		lineageTag: 14d6961c-33fe-4570-9726-215fb5ad1cf2
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Date]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column Year
+		formatString: 0
+		lineageTag: 61fe7da1-1c37-4d7a-a369-ed35a91477f9
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Year]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quarter
+		lineageTag: 9dbe8fd1-a284-4ca1-8df2-ef90a438765d
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Quarter]
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthNo
+		formatString: 0
+		lineageTag: 2516f6cb-6ff2-4c12-b739-a2aa5b1c451c
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [MonthNo]
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		lineageTag: 42b2b1a1-e6bc-47d8-9e7b-a81aa2970afd
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [MonthName]
+		sortByColumn: MonthNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthShort
+		lineageTag: bd9cdc2d-9307-4c38-9e80-723f2cd51834
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [MonthShort]
+		sortByColumn: MonthNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column WeekOfYear
+		formatString: 0
+		lineageTag: 93b76293-7d32-46a2-8e76-e604ccecdb12
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [WeekOfYear]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Day
+		formatString: 0
+		lineageTag: 9cf8198c-4448-449e-83e8-7efc5f554c84
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Day]
+
+		annotation SummarizationSetBy = Automatic
+
+	column WeekdayNo
+		formatString: 0
+		lineageTag: 74796118-bbb2-47f9-931f-f905fdb4900f
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [WeekdayNo]
+
+		annotation SummarizationSetBy = Automatic
+
+	column WeekdayName
+		lineageTag: c03ac68b-9863-46ad-ab7d-d813d8b330d7
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [WeekdayName]
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsWeekend
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: cb78bf2f-cd1e-4e73-b7ed-e11bc6be2072
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [IsWeekend]
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthYear
+		dataType: string
+		lineageTag: fa6f4358-acdc-4eab-bed3-a086cbda1def
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [MonthYear]
+		sortByColumn: MonthYearKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthYearKey = dim_date[Year] * 100 + dim_date[MonthNo]
+		dataType: int64
+		isHidden
+		lineageTag: f958a674-c655-4d3f-8137-e64fa356303b
+
+	hierarchy 'Date Hierarchy'
+		lineageTag: 3711a6b2-9ac7-4b9f-b8da-0c04743c055f
+
+		level Date
+			lineageTag: 19ce06cd-1486-4f36-81f0-482a5f540c24
+			column: Date
+
+		level Day
+			lineageTag: 1745e8cf-2949-41d7-a7d0-faaee019d6ae
+			column: Day
+
+		level MonthName
+			lineageTag: 3f97d179-b721-4c7c-9835-d5401d6f7668
+			column: MonthName
+
+		level Quarter
+			lineageTag: 6ce035fe-a11b-49c9-8b5c-059224d64226
+			column: Quarter
+
+		level MonthYear
+			lineageTag: 7b8253d7-5273-45a0-8063-e6fe08ab8862
+			column: MonthYear
+
+		level Year
+			lineageTag: 07a83fd6-5d33-4509-80bf-37266a9a04a9
+			column: Year
+
+		level MonthShort
+			lineageTag: 00e0ec1e-a6e1-4ce3-8263-6828e891d2a2
+			column: MonthShort
+
+	partition dim_date = calculated
+		source = VAR _min = DATE ( YEAR ( MIN ( 'fct_Billing'[Month_start] ) ), 1, 1 ) VAR _maxYear = MAX ( YEAR ( MAX ( 'fct_Billing'[Month_start] ) ), MAX ( 'fct_bs'[year] ) ) VAR _max = DATE ( _maxYear, 12, 31 ) RETURN ADDCOLUMNS ( CALENDAR ( _min, _max ), "Year", YEAR ( [Date] ), "Quarter", "Q" & QUARTER ( [Date] ), "MonthNo", MONTH ( [Date] ), "MonthName", FORMAT ( [Date], "MMMM" ), "MonthShort", FORMAT ( [Date], "MMM" ), "MonthYear", FORMAT ( [Date], "MMM yy" ), "WeekOfYear", WEEKNUM ( [Date], 2 ), "Day", DAY ( [Date] ), "WeekdayNo", WEEKDAY ( [Date], 2 ), "WeekdayName", FORMAT ( [Date], "dddd" ), "IsWeekend", WEEKDAY ( [Date], 2 ) > 5 )
+

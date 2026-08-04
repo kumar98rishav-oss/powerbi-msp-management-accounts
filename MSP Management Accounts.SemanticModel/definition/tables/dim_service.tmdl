@@ -1,0 +1,103 @@
+table dim_service
+	lineageTag: 739f6f79-8c97-4562-bdf5-6ae2641de8e5
+
+	column service_code
+		dataType: string
+		isHidden
+		lineageTag: 0f80310e-28c2-4ce4-89f3-fd0f01b5bb99
+		summarizeBy: none
+		sourceColumn: service_code
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column service_line
+		dataType: string
+		lineageTag: ae9123da-70d2-443d-8a94-f1165bce9c84
+		summarizeBy: none
+		sourceColumn: service_line
+
+		annotation SummarizationSetBy = Automatic
+
+	column category
+		dataType: string
+		lineageTag: 56f0cd7a-80d9-4582-ab4e-ec4fd464a4fd
+		summarizeBy: none
+		sourceColumn: category
+
+		annotation SummarizationSetBy = Automatic
+
+	column standard_bill_rate_gbp
+		dataType: int64
+		formatString: 0
+		lineageTag: fc2cf05e-9b0c-4046-9b46-d14685ebc01c
+		summarizeBy: none
+		sourceColumn: standard_bill_rate_gbp
+
+		annotation SummarizationSetBy = Automatic
+
+	column loaded_cost_inr
+		dataType: int64
+		formatString: 0
+		lineageTag: d1bc2137-e3ef-4200-ab0c-0d090387ca28
+		summarizeBy: none
+		sourceColumn: loaded_cost_inr
+
+		annotation SummarizationSetBy = Automatic
+
+	column target_gross_margin
+		dataType: double
+		lineageTag: 757c9e3f-a7c4-48b5-b3c9-e51a3b6d2c63
+		summarizeBy: none
+		sourceColumn: target_gross_margin
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column service_Key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 810c326b-ba45-40dc-8586-354405f9da3f
+		summarizeBy: none
+		sourceColumn: service_Key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'category Hierarchy'
+		lineageTag: 00f11048-6c82-4b9c-9896-d33681b22f9f
+
+		level category
+			lineageTag: a07f0b9f-e924-4069-9e3a-6687c7c50583
+			column: category
+
+		level service_line
+			lineageTag: 2fdd2716-dec7-451a-a66d-dfbf9a071103
+			column: service_line
+
+	partition dim_service = m
+		mode: import
+		source =
+				let
+				  Source = Folder.Files(pFolder),
+				    #"Reordered Columns" = Table.ReorderColumns(Source,{"Date modified", "Content", "Name", "Extension", "Date accessed", "Date created", "Attributes", "Folder Path"}),
+				    #"Removed Other Columns" = Table.SelectColumns(#"Reordered Columns",{"Content", "Date modified", "Name", "Extension"}),
+				    #"Filtered Rows" = Table.SelectRows(#"Removed Other Columns", each ([Name] = "service_lines.csv")),
+				    Content = #"Filtered Rows"{0}[Content],
+				    #"Imported CSV" = Csv.Document(Content,[Delimiter=",", Columns=6, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Imported CSV", [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"service_code", type text}, {"service_line", type text}, {"category", type text}, {"standard_bill_rate_gbp", Int64.Type}, {"loaded_cost_inr", Int64.Type}, {"target_gross_margin", type number}}),
+				    #"Added Index" = Table.AddIndexColumn(#"Changed Type", "Index", 1, 1, Int64.Type),
+				    #"Reordered Columns1" = Table.ReorderColumns(#"Added Index",{"Index", "service_code", "service_line", "category", "standard_bill_rate_gbp", "loaded_cost_inr", "target_gross_margin"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Reordered Columns1",{{"Index", "service_Key"}})
+				in
+				  #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

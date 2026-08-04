@@ -1,0 +1,123 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.11.0/schema.json",
+  "name": "44170fe033b6de02523a",
+  "position": {
+    "x": 9.4945309670409266,
+    "y": 0,
+    "z": 0,
+    "height": 719.81317141522652,
+    "width": 1271.0322279308734,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "keyDriversVisual",
+    "query": {
+      "queryState": {
+        "ExplainBy": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_service"
+                    }
+                  },
+                  "Property": "service_line"
+                }
+              },
+              "queryRef": "dim_service.service_line",
+              "nativeQueryRef": "service_line"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_Client"
+                    }
+                  },
+                  "Property": "region"
+                }
+              },
+              "queryRef": "dim_Client.region",
+              "nativeQueryRef": "region"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_Client"
+                    }
+                  },
+                  "Property": "tier"
+                }
+              },
+              "queryRef": "dim_Client.tier",
+              "nativeQueryRef": "tier"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_Client"
+                    }
+                  },
+                  "Property": "client_name"
+                }
+              },
+              "queryRef": "dim_Client.client_name",
+              "nativeQueryRef": "client_name"
+            }
+          ]
+        },
+        "Target": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Billing"
+                    }
+                  },
+                  "Property": "Row Utilisation"
+                }
+              },
+              "queryRef": "fct_Billing.Row Utilisation",
+              "nativeQueryRef": "Row Utilisation"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "isDefaultSort": true
+      }
+    },
+    "objects": {
+      "keyDrivers": [
+        {
+          "properties": {
+            "numericTargetSelectedKind": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            },
+            "selectedAnalysis": {
+              "expr": {
+                "Literal": {
+                  "Value": "'topProfiles'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

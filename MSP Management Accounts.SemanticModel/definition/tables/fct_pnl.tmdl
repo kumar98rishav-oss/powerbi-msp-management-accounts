@@ -1,0 +1,81 @@
+table fct_pnl
+	lineageTag: 51f9a94f-98d1-43ea-bd9e-efc93926a419
+
+	column Category
+		dataType: string
+		lineageTag: 03505082-c3d4-4ece-809e-2a18a12bdb99
+		summarizeBy: none
+		sourceColumn: Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column Line_Item
+		dataType: string
+		lineageTag: e7aa293f-0371-46d8-95ae-1a82b6cf5d29
+		summarizeBy: none
+		sourceColumn: Line_Item
+
+		annotation SummarizationSetBy = Automatic
+
+	column Amount
+		dataType: int64
+		formatString: 0
+		lineageTag: 59f41a26-a47e-4f75-89f1-179879b02640
+		summarizeBy: sum
+		sourceColumn: Amount
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_start
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 0af38798-4f6b-4640-b562-840955256249
+		summarizeBy: none
+		sourceColumn: month_start
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	hierarchy 'Category Hierarchy'
+		lineageTag: 850cee07-6dd2-4190-bd69-01cd01242c07
+
+		level Category
+			lineageTag: 0370802a-f781-4327-98b9-eca30833cdf1
+			column: Category
+
+		level Line_Item
+			lineageTag: 19a01bdd-1cb9-42d5-9f21-137c408bb22c
+			column: Line_Item
+
+	partition fct_pnl = m
+		mode: import
+		source =
+				let
+				    Source = stg_FolderFiles,
+				    #"Filtered Rows" = Table.SelectRows(Source, each ([Name] = "income_statement_wide.csv")),
+				    Content = #"Filtered Rows"{0}[Content],
+				    #"Imported CSV" = Csv.Document(Content,[Delimiter=",", Columns=38, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Imported CSV",{{"Column1", type text}, {"Column2", type text}, {"Column3", type text}, {"Column4", type text}, {"Column5", type text}, {"Column6", type text}, {"Column7", type text}, {"Column8", type text}, {"Column9", type text}, {"Column10", type text}, {"Column11", type text}, {"Column12", type text}, {"Column13", type text}, {"Column14", type text}, {"Column15", type text}, {"Column16", type text}, {"Column17", type text}, {"Column18", type text}, {"Column19", type text}, {"Column20", type text}, {"Column21", type text}, {"Column22", type text}, {"Column23", type text}, {"Column24", type text}, {"Column25", type text}, {"Column26", type text}, {"Column27", type text}, {"Column28", type text}, {"Column29", type text}, {"Column30", type text}, {"Column31", type text}, {"Column32", type text}, {"Column33", type text}, {"Column34", type text}, {"Column35", type text}, {"Column36", type text}, {"Column37", type text}, {"Column38", type text}}),
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Changed Type", [PromoteAllScalars=true]),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Promoted Headers",{{"Category", type text}, {"Line_Item", type text}, {"Jan-2023", type text}, {"Feb-2023", Int64.Type}, {"Mar-2023", Int64.Type}, {"Apr-2023", Int64.Type}, {"May-2023", Int64.Type}, {"Jun-2023", Int64.Type}, {"Jul-2023", type text}, {"Aug-2023", Int64.Type}, {"Sep-2023", type text}, {"Oct-2023", Int64.Type}, {"Nov-2023", Int64.Type}, {"Dec-2023", type text}, {"Jan-2024", Int64.Type}, {"Feb-2024", Int64.Type}, {"Mar-2024", type text}, {"Apr-2024", Int64.Type}, {"May-2024", Int64.Type}, {"Jun-2024", Int64.Type}, {"Jul-2024", Int64.Type}, {"Aug-2024", Int64.Type}, {"Sep-2024", Int64.Type}, {"Oct-2024", type text}, {"Nov-2024", Int64.Type}, {"Dec-2024", Int64.Type}, {"Jan-2025", Int64.Type}, {"Feb-2025", Int64.Type}, {"Mar-2025", Int64.Type}, {"Apr-2025", type text}, {"May-2025", Int64.Type}, {"Jun-2025", type text}, {"Jul-2025", Int64.Type}, {"Aug-2025", Int64.Type}, {"Sep-2025", Int64.Type}, {"Oct-2025", Int64.Type}, {"Nov-2025", Int64.Type}, {"Dec-2025", type text}}),
+				    #"Invoked Custom Function" = Table.AddColumn(#"Changed Type1", "fnCleanText", each fnCleanText([Category])),
+				    #"Invoked Custom Function1" = Table.AddColumn(#"Invoked Custom Function", "fnCleanText.1", each fnCleanText([Line_Item])),
+				    #"Filled Down" = Table.FillDown(#"Invoked Custom Function1",{"fnCleanText", "fnCleanText.1"}),
+				    #"Reordered Columns" = Table.ReorderColumns(#"Filled Down",{"fnCleanText", "fnCleanText.1", "Category", "Line_Item", "Jan-2023", "Feb-2023", "Mar-2023", "Apr-2023", "May-2023", "Jun-2023", "Jul-2023", "Aug-2023", "Sep-2023", "Oct-2023", "Nov-2023", "Dec-2023", "Jan-2024", "Feb-2024", "Mar-2024", "Apr-2024", "May-2024", "Jun-2024", "Jul-2024", "Aug-2024", "Sep-2024", "Oct-2024", "Nov-2024", "Dec-2024", "Jan-2025", "Feb-2025", "Mar-2025", "Apr-2025", "May-2025", "Jun-2025", "Jul-2025", "Aug-2025", "Sep-2025", "Oct-2025", "Nov-2025", "Dec-2025"}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Reordered Columns",{"Category", "Line_Item"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"fnCleanText.1", "Line_Item"}, {"fnCleanText", "Category"}}),
+				    #"Unpivoted Other Columns" = Table.UnpivotOtherColumns(#"Renamed Columns", {"Category", "Line_Item"}, "Attribute", "Value"),
+				    #"Invoked Custom Function2" = Table.AddColumn(#"Unpivoted Other Columns", "fnCleanMoney", each fnCleanMoney([Value])),
+				    #"Changed Type with Locale" = Table.TransformColumnTypes(#"Invoked Custom Function2", {{"Attribute", type date}}, "en-US"),
+				    #"Removed Columns1" = Table.RemoveColumns(#"Changed Type with Locale",{"Value"}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Removed Columns1",{{"fnCleanMoney", "Value"}}),
+				    #"Changed Type2" = Table.TransformColumnTypes(#"Renamed Columns1",{{"Value", Int64.Type}}),
+				    #"Renamed Columns2" = Table.RenameColumns(#"Changed Type2",{{"Attribute", "month_start"}, {"Value", "Amount"}})
+				in
+				    #"Renamed Columns2"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

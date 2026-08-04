@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "MSP Management Accounts"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "b8c670c7-3e13-4cb2-845c-e98fee73a16f"
+  }
+}

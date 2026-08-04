@@ -1,0 +1,145 @@
+table fct_Billing
+	lineageTag: a49747ca-0cca-4fdf-b5c6-55f146955e1d
+
+	measure sample =
+			AVERAGEX(
+			    FILTER(
+			        ALLSELECTED(dim_date),
+			        dim_date[Date] >= EOMONTH(MAX(dim_date[Date]), -3) + 1
+			    ),
+			    CALCULATE(
+			        [Revenue (P&L)],
+			        FILTER(
+			            fct_Billing,
+			            fct_Billing[Date] >= EOMONTH(MAX(dim_date[Date]), -3) + 1
+			        )
+			    )
+			)
+		formatString: \$#,##0
+		displayFolder: Metrics
+
+	column Month_start
+		dataType: string
+		lineageTag: 0c9b6f3b-0580-4b56-b7a1-ed0e9d926864
+		summarizeBy: none
+		sourceColumn: Month_start
+
+		annotation SummarizationSetBy = Automatic
+
+	column client_id
+		dataType: string
+		isHidden
+		lineageTag: 1c70a13b-478c-46a9-8cdf-92879adaa2f3
+		summarizeBy: none
+		sourceColumn: client_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column service_code
+		dataType: string
+		isHidden
+		lineageTag: 4d041163-d962-4405-96e0-27d8a404907f
+		summarizeBy: none
+		sourceColumn: service_code
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CostINR
+		dataType: double
+		isHidden
+		lineageTag: f9b02c9a-84d3-46e4-b02e-345ecb9069dd
+		summarizeBy: sum
+		sourceColumn: CostINR
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column BillableHours
+		dataType: double
+		lineageTag: 97596cd1-34b6-43fd-8fc4-1dfdd27509ca
+		summarizeBy: sum
+		sourceColumn: BillableHours
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column CapacityHours
+		dataType: double
+		lineageTag: 13690a5f-2c16-4edf-8f23-b88299f4f3bb
+		summarizeBy: sum
+		sourceColumn: CapacityHours
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column CostGBP
+		dataType: double
+		lineageTag: 6ca6fbd6-d958-4225-a9a7-f8d514f9da6a
+		summarizeBy: sum
+		sourceColumn: CostGBP
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Row Utilisation' = DIVIDE ( fct_Billing[BillableHours], fct_Billing[CapacityHours] )
+		formatString: 0.0%
+		lineageTag: 38abffa0-321c-4deb-981f-387ad48e95ac
+
+	column Date = DATE ( VALUE ( RIGHT ( fct_Billing[Month_start], 4 ) ), VALUE ( LEFT ( fct_Billing[Month_start], FIND ( "/", fct_Billing[Month_start] ) - 1 ) ), 1 )
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 79a9761e-bcd7-449c-a952-1f5c785c86f7
+
+	partition fct_Billing = m
+		mode: import
+		source =
+				let
+				    Source = Table.Combine({resource_billing_2023, resource_billing_2024, resource_billing_2025}),
+				    #"Removed Duplicates" = Table.Distinct(Source, {"billing_date"}),
+				    #"Trimmed Text" = Table.TransformColumns(#"Removed Duplicates",{{"service_code", Text.Trim, type text}}),
+				    #"Uppercased Text" = Table.TransformColumns(#"Trimmed Text",{{"service_code", Text.Upper, type text}}),
+				    #"Invoked Custom Function" = Table.AddColumn(#"Uppercased Text", "fnParseCompact", each fnParseCompact([capacity_hours])),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Invoked Custom Function",{{"fnParseCompact", type number}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"capacity_hours"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"fnParseCompact", "capacity_hours"}}),
+				    #"Uppercased Text1" = Table.TransformColumns(#"Renamed Columns",{{"status", Text.Upper, type text}}),
+				    #"Invoked Custom Function1" = Table.AddColumn(#"Uppercased Text1", "fnCleanMoney", each fnCleanMoney([cost_inr])),
+				    #"Removed Columns1" = Table.RemoveColumns(#"Invoked Custom Function1",{"amount_billed_gbp", "cost_inr"}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Removed Columns1",{{"fnCleanMoney", "cost_inr"}}),
+				    #"Invoked Custom Function2" = Table.AddColumn(#"Renamed Columns1", "fnCleanText", each fnCleanText([billable_hours])),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Invoked Custom Function2",{{"fnCleanText", type number}}),
+				    #"Removed Columns2" = Table.RemoveColumns(#"Changed Type1",{"billable_hours"}),
+				    #"Renamed Columns2" = Table.RenameColumns(#"Removed Columns2",{{"fnCleanText", "billable_hours"}}),
+				    #"Invoked Custom Function3" = Table.AddColumn(#"Renamed Columns2", "fnCleanMoney", each fnCleanMoney([bill_rate_gbp])),
+				    #"Changed Type2" = Table.TransformColumnTypes(#"Invoked Custom Function3",{{"fnCleanMoney", Int64.Type}}),
+				    #"Removed Columns3" = Table.RemoveColumns(#"Changed Type2",{"bill_rate_gbp"}),
+				    #"Renamed Columns3" = Table.RenameColumns(#"Removed Columns3",{{"fnCleanMoney", "bill_rate_gbp"}}),
+				    #"Invoked Custom Function4" = Table.AddColumn(#"Renamed Columns3", "fnParseDate", each fnParseDate([billing_date])),
+				    #"Removed Columns4" = Table.RemoveColumns(#"Invoked Custom Function4",{"billing_date"}),
+				    #"Renamed Columns4" = Table.RenameColumns(#"Removed Columns4",{{"fnParseDate", "billing_date"}}),
+				    #"Reordered Columns" = Table.ReorderColumns(#"Renamed Columns4",{"billing_date", "client_id", "service_code", "resource_id", "status", "capacity_hours", "cost_inr", "billable_hours", "bill_rate_gbp"}),
+				    #"Changed Type3" = Table.TransformColumnTypes(#"Reordered Columns",{{"billing_date", type date}}),
+				    #"Added Custom" = Table.AddColumn(#"Changed Type3", "moth_start_date", each Date.StartOfMonth([billing_date])),
+				    #"Renamed Columns5" = Table.RenameColumns(#"Added Custom",{{"moth_start_date", "Month_start"}}),
+				    #"Grouped Rows" = Table.Group(#"Renamed Columns5", {"Month_start", "client_id", "service_code"}, {{"Revenue", each List.Sum([bill_rate_gbp]), type nullable number}, {"CostINR", each List.Sum([cost_inr]), type nullable number}, {"BillableHours", each List.Sum([billable_hours]), type nullable number}, {"CapacityHours", each List.Sum([capacity_hours]), type nullable number}}),
+				    #"Merged Queries" = Table.NestedJoin(#"Grouped Rows", {"Month_start"}, fx_rates, {"month_start"}, "fx_rates", JoinKind.LeftOuter),
+				    #"Expanded fx_rates" = Table.ExpandTableColumn(#"Merged Queries", "fx_rates", {"gbp_inr"}, {"fx_rates.gbp_inr"}),
+				    #"Renamed Columns6" = Table.RenameColumns(#"Expanded fx_rates",{{"fx_rates.gbp_inr", "gbp_inr"}}),
+				    #"Added Custom1" = Table.AddColumn(#"Renamed Columns6", "CostGBP", each if [gbp_inr] = null then null else [CostINR]/[gbp_inr]),
+				    #"Changed Type4" = Table.TransformColumnTypes(#"Added Custom1",{{"CostGBP", type number}}),
+				    #"Removed Columns5" = Table.RemoveColumns(#"Changed Type4",{"gbp_inr", "Revenue"})
+				in
+				    #"Removed Columns5"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

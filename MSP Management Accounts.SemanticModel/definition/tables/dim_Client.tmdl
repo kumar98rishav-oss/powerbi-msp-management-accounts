@@ -1,0 +1,127 @@
+table dim_Client
+	lineageTag: 0b66b40f-611e-4f96-9396-31ca887c630e
+
+	column client_id
+		dataType: string
+		isHidden
+		lineageTag: b0414025-ecee-441e-8540-34fbd4e2c41d
+		summarizeBy: none
+		sourceColumn: client_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column client_name
+		dataType: string
+		lineageTag: a8a4399e-6e17-493f-b9c2-7257b611200a
+		summarizeBy: none
+		sourceColumn: client_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column region
+		dataType: string
+		lineageTag: 43e90f00-32c4-490b-b406-2e2eadfde38e
+		summarizeBy: none
+		sourceColumn: region
+
+		annotation SummarizationSetBy = Automatic
+
+	column country
+		dataType: string
+		lineageTag: 1f1448d4-e43e-4b41-ade4-7e99fc570e13
+		summarizeBy: none
+		sourceColumn: country
+
+		annotation SummarizationSetBy = Automatic
+
+	column industry
+		dataType: string
+		lineageTag: a984ff95-fa96-4293-bc24-2fbf3b0195b3
+		summarizeBy: none
+		sourceColumn: industry
+
+		annotation SummarizationSetBy = Automatic
+
+	column account_manager
+		dataType: string
+		lineageTag: 11c6652b-3bcb-4e52-ad2c-f03256969cb2
+		summarizeBy: none
+		sourceColumn: account_manager
+
+		annotation SummarizationSetBy = Automatic
+
+	column tier
+		dataType: string
+		lineageTag: 41c603c8-7169-44ac-a0c1-6519f7c160b3
+		summarizeBy: none
+		sourceColumn: tier
+
+		annotation SummarizationSetBy = Automatic
+
+	column onboarded_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 29b7a41f-0f12-417e-b4e7-36f7620958cf
+		summarizeBy: none
+		sourceColumn: onboarded_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Client_Key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: e1cb7853-70f4-47d7-96f0-29f52ba96f83
+		summarizeBy: none
+		sourceColumn: Client_Key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'region Hierarchy'
+		lineageTag: a7984d8f-7f8a-49a6-8cd4-04f546ece8c8
+
+		level region
+			lineageTag: d3a5d428-6908-42c7-a552-9bb5d2d3fb8b
+			column: region
+
+		level country
+			lineageTag: f04ed81a-0d5d-420e-8dc1-6829730e5adf
+			column: country
+
+		level client_name
+			lineageTag: a967a5e2-940d-4f28-aa9b-b82b26507e0c
+			column: client_name
+
+	partition dim_Client = m
+		mode: import
+		source =
+				let
+				    Source = stg_FolderFiles,
+				    #"Filtered Rows" = Table.SelectRows(Source, each ([Name] = "clients.csv")),
+				    Content = #"Filtered Rows"{0}[Content],
+				    #"Imported CSV" = Csv.Document(Content,[Delimiter=",", Columns=8, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Imported CSV",{{"Column1", type text}, {"Column2", type text}, {"Column3", type text}, {"Column4", type text}, {"Column5", type text}, {"Column6", type text}, {"Column7", type text}, {"Column8", type text}}),
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Changed Type", [PromoteAllScalars=true]),
+				    #"Invoked Custom Function" = Table.AddColumn(#"Promoted Headers", "fnNormalizeText", each fnNormalizeText([tier])),
+				    #"Renamed Columns" = Table.RenameColumns(#"Invoked Custom Function",{{"fnNormalizeText", "_tier"}}),
+				    #"Invoked Custom Function1" = Table.AddColumn(#"Renamed Columns", "fnParseDate", each fnParseDate([onboarded_date])),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Invoked Custom Function1",{{"fnParseDate", "_onboarded_date"}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Renamed Columns1",{"tier", "onboarded_date"}),
+				    #"Renamed Columns2" = Table.RenameColumns(#"Removed Columns",{{"_tier", "tier"}, {"_onboarded_date", "onboarded_date"}}),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Renamed Columns2",{{"tier", type text}, {"onboarded_date", type date}}),
+				    #"Added Index" = Table.AddIndexColumn(#"Changed Type1", "Index", 1, 1, Int64.Type),
+				    #"Reordered Columns" = Table.ReorderColumns(#"Added Index",{"Index", "client_id", "client_name", "region", "country", "industry", "account_manager", "tier", "onboarded_date"}),
+				    #"Renamed Columns3" = Table.RenameColumns(#"Reordered Columns",{{"Index", "Client_Key"}})
+				in
+				    #"Renamed Columns3"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

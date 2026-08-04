@@ -1,0 +1,52 @@
+table fct_target
+	lineageTag: 7a9eb118-2c6e-4cfb-a900-9b43bdccffc6
+
+	column month
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: add1fff0-fd62-4a9c-8276-ded96e0e6e29
+		summarizeBy: none
+		sourceColumn: month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column metric
+		dataType: string
+		lineageTag: 35d8e07e-1f15-45e9-9ec0-45aeb454221d
+		summarizeBy: none
+		sourceColumn: metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column target
+		dataType: int64
+		formatString: 0
+		lineageTag: a7ca30ff-97ff-4bc8-be51-5afc3a7464bc
+		summarizeBy: sum
+		sourceColumn: target
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fct_target = m
+		mode: import
+		source =
+				let
+				    Source = stg_FolderFiles,
+				    #"Filtered Rows" = Table.SelectRows(Source, each ([Name] = "targets_long.csv")),
+				    Content = #"Filtered Rows"{0}[Content],
+				    #"Imported CSV" = Csv.Document(Content,[Delimiter=",", Columns=3, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Imported CSV", [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"month", type date}, {"metric", type text}, {"target", type text}}),
+				    #"Invoked Custom Function" = Table.AddColumn(#"Changed Type", "fnParseCompact", each fnParseCompact([target])),
+				    #"Removed Columns" = Table.RemoveColumns(#"Invoked Custom Function",{"target"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"fnParseCompact", "target"}}),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Renamed Columns",{{"target", Int64.Type}})
+				in
+				    #"Changed Type1"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

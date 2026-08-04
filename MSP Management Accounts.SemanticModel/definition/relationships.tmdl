@@ -1,0 +1,28 @@
+relationship AutoDetected_811ea991-0e54-41a5-8718-637e6f933d69
+	fromColumn: fct_Billing.client_id
+	toColumn: dim_Client.client_id
+
+relationship AutoDetected_cc4487c4-4f7e-411a-b421-cf3d8bf7cbc0
+	fromColumn: fct_Billing.service_code
+	toColumn: dim_service.service_code
+
+relationship 5d52806d-a2eb-df90-779f-31753c12a93b
+	fromColumn: fct_pnl.month_start
+	toColumn: dim_date.Date
+
+relationship e7c7a6f7-f8bb-b4c0-7dc8-fc42f30cf89d
+	fromColumn: fct_target.month
+	toColumn: dim_date.Date
+
+relationship Relationship
+	fromColumn: fct_bs.'Quarter End Date'
+	toColumn: dim_date.Date
+
+relationship 'Relationship 1'
+	fromColumn: fct_Billing.Date
+	toColumn: dim_date.Date
+
+relationship 'Relationship 2'
+	fromColumn: fct_pnl.Category
+	toColumn: dim_PnLCategory.'PnL Category (ordered)'
+

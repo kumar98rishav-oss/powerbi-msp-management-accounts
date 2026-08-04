@@ -1,0 +1,276 @@
+expression pFolder = "C:\MSP-Finance\data" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: a853832a-1096-4491-ac30-020a40025c23
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression fnCleanMoney =
+		let
+		    Source = (input as any) as nullable number =>
+		let
+		    txt   = if input = null then null else Text.Trim(Text.From(input)),
+		    empty = txt = null or List.Contains({"", "null", "NA", "N/A", "n/a", "-"}, txt),
+		    out   = if empty then null else
+		              let
+		                  neg    = Text.StartsWith(txt, "(") or Text.StartsWith(txt, "-"),
+		                  digits = Text.Select(txt, {"0".."9", "."}),
+		                  number = try Number.From(digits) otherwise null,
+		                  signed = if number = null then null else if neg then -number else number
+		              in  signed
+		in
+		    out
+		in
+		    Source
+	lineageTag: fe4e6af3-9ff6-4ab2-b770-17054a39cbe1
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression fnParseCompact =
+		let
+		    Source = (input as any) as nullable number =>
+		let
+		    txt = if input = null then null else Text.Upper(Text.Trim(Text.From(input))),
+		    out = if txt = null or txt = "" then null else
+		            let
+		                neg  = Text.StartsWith(txt, "-"),
+		                mult = if Text.EndsWith(txt, "M") then 1000000 else if Text.EndsWith(txt, "K") then 1000 else 1,
+		                core = Text.Select(txt, {"0".."9", "."}),
+		                num  = try Number.From(core) * mult otherwise null
+		            in  if num = null then null else if neg then -num else num
+		in
+		    out
+		in
+		    Source
+	lineageTag: e780b868-0df3-414e-b78d-0b9ef1a627f8
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression fnParseDate =
+		let
+		    Source = (input as any) as nullable date =>
+		let
+		    txt   = Text.Trim(Text.From(input)),
+		    tries = {
+		        try Date.FromText(txt, [Format="yyyy-MM-dd", Culture="en-US"]) otherwise null,
+		        try Date.FromText(txt, [Format="dd/MM/yyyy", Culture="en-GB"]) otherwise null,
+		        try Date.FromText(txt, [Format="MMM d, yyyy", Culture="en-US"]) otherwise null,
+		        try Date.FromText(Text.Replace(txt, ".", "-"), [Format="yyyy-MM-dd", Culture="en-US"]) otherwise null
+		    },
+		    hit = List.First(List.Select(tries, each _ <> null), null)
+		in
+		    hit
+		in
+		    Source
+	lineageTag: 23a66f62-0d49-4c10-87be-9fdc99ecaa0b
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression fnCleanText =
+		let
+		    Source = (input as any) as nullable text =>
+		let
+		    txt   = if input = null then null else Text.From(input),
+		    clean = if txt = null then null else Text.Trim(Text.Clean(txt)),
+		    empty = clean = null or List.Contains({"", "null", "NULL", "NA", "N/A", "n/a", "-"}, clean),
+		    out   = if empty then null else clean
+		in
+		    out
+		in
+		    Source
+	lineageTag: 412a9135-0e0b-4d37-ab5c-c48388aa2644
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression fnNormalizeText =
+		let
+		    Source = (input as any) as nullable text =>
+		let
+		    // Convert to text
+		    txt = if input = null then null else Text.From(input),
+		
+		    // Remove hidden characters and trim
+		    clean = if txt = null then null else Text.Trim(Text.Clean(txt)),
+		
+		    // Convert common placeholders to null
+		    empty = clean = null or
+		            List.Contains(
+		                {"", "null", "NULL", "NA", "N/A", "n/a", "-", "--"},
+		                clean
+		            ),
+		
+		    // Collapse multiple spaces into a single space
+		    singleSpace =
+		        if empty then
+		            null
+		        else
+		            Text.Combine(
+		                List.Select(
+		                    Text.SplitAny(clean, " "),
+		                    each _ <> ""
+		                ),
+		                " "
+		            ),
+		
+		    // Proper case each word
+		    proper =
+		        if singleSpace = null then
+		            null
+		        else
+		            Text.Combine(
+		                List.Transform(
+		                    Text.Split(singleSpace, " "),
+		                    each Text.Proper(_)
+		                ),
+		                " "
+		            )
+		
+		in
+		    proper
+		in
+		    Source
+	lineageTag: 9c040c9c-4249-4331-887a-e58f17127346
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression stg_FolderFiles =
+		let
+		  Source = Folder.Files(pFolder),
+		    #"Reordered Columns" = Table.ReorderColumns(Source,{"Date modified", "Content", "Name", "Extension", "Date accessed", "Date created", "Attributes", "Folder Path"}),
+		    #"Removed Other Columns" = Table.SelectColumns(#"Reordered Columns",{"Content", "Date modified", "Name", "Extension"})
+		in
+		  #"Removed Other Columns"
+	lineageTag: 4f9f69d4-082e-410e-964f-a8eff45f5893
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression resource_billing_2023 =
+		let
+		    Source = stg_FolderFiles,
+		    #"Filtered Rows" = Table.SelectRows(Source, each ([Name] = "resource_billing_2023.csv")),
+		    Content = #"Filtered Rows"{0}[Content],
+		    #"Imported CSV" = Csv.Document(Content,[Delimiter=",", Columns=10, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Imported CSV",{{"Column1", type text}, {"Column2", type text}, {"Column3", type text}, {"Column4", type text}, {"Column5", type text}, {"Column6", type text}, {"Column7", type text}, {"Column8", type text}, {"Column9", type text}, {"Column10", type text}}),
+		    #"Promoted Headers" = Table.PromoteHeaders(#"Changed Type", [PromoteAllScalars=true]),
+		    #"Changed Type1" = Table.TransformColumnTypes(#"Promoted Headers",{{"billing_date", type text}, {"client_id", type text}, {"service_code", type text}, {"resource_id", type text}, {"billable_hours", type text}, {"capacity_hours", type text}, {"bill_rate_gbp", type text}, {"amount_billed_gbp", type text}, {"cost_inr", type text}, {"status", type text}})
+		in
+		    #"Changed Type1"
+	lineageTag: 33f11e1b-a6f2-4676-abd4-dc0a6c9d5107
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression resource_billing_2024 =
+		let
+		    Source = stg_FolderFiles,
+		    #"Filtered Rows" = Table.SelectRows(Source, each ([Name] = "resource_billing_2024.csv")),
+		    Content = #"Filtered Rows"{0}[Content],
+		    #"Imported CSV" = Csv.Document(Content,[Delimiter=",", Columns=10, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Imported CSV",{{"Column1", type text}, {"Column2", type text}, {"Column3", type text}, {"Column4", type text}, {"Column5", type text}, {"Column6", type text}, {"Column7", type text}, {"Column8", type text}, {"Column9", type text}, {"Column10", type text}}),
+		    #"Promoted Headers" = Table.PromoteHeaders(#"Changed Type", [PromoteAllScalars=true]),
+		    #"Changed Type1" = Table.TransformColumnTypes(#"Promoted Headers",{{"billing_date", type text}, {"client_id", type text}, {"service_code", type text}, {"resource_id", type text}, {"billable_hours", type text}, {"capacity_hours", type text}, {"bill_rate_gbp", type text}, {"amount_billed_gbp", type text}, {"cost_inr", type text}, {"status", type text}})
+		in
+		    #"Changed Type1"
+	lineageTag: 1e2272a4-bdfa-4056-a9aa-51f686e04a8a
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression resource_billing_2025 =
+		let
+		    Source = stg_FolderFiles,
+		    #"Filtered Rows" = Table.SelectRows(Source, each ([Name] = "resource_billing_2025.csv")),
+		    Content = #"Filtered Rows"{0}[Content],
+		    #"Imported CSV" = Csv.Document(Content,[Delimiter=",", Columns=10, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Imported CSV",{{"Column1", type text}, {"Column2", type text}, {"Column3", type text}, {"Column4", type text}, {"Column5", type text}, {"Column6", type text}, {"Column7", type text}, {"Column8", type text}, {"Column9", type text}, {"Column10", type text}}),
+		    #"Promoted Headers" = Table.PromoteHeaders(#"Changed Type", [PromoteAllScalars=true]),
+		    #"Changed Type1" = Table.TransformColumnTypes(#"Promoted Headers",{{"billing_date", type text}, {"client_id", type text}, {"service_code", type text}, {"resource_id", type text}, {"billable_hours", type text}, {"capacity_hours", type text}, {"bill_rate_gbp", type text}, {"amount_billed_gbp", type text}, {"cost_inr", type text}, {"status", type text}})
+		in
+		    #"Changed Type1"
+	lineageTag: 2cf6a074-faa7-47bd-a5ab-7ca719736a7f
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression fx_rates =
+		let
+		    Source = stg_FolderFiles,
+		    #"Filtered Rows" = Table.SelectRows(Source, each ([Name] = "fx_rates.csv")),
+		    Content = #"Filtered Rows"{0}[Content],
+		    #"Imported CSV" = Csv.Document(Content,[Delimiter=",", Columns=2, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+		    #"Promoted Headers" = Table.PromoteHeaders(#"Imported CSV", [PromoteAllScalars=true]),
+		    #"Invoked Custom Function" = Table.AddColumn(#"Promoted Headers", "fnCleanMoney", each fnCleanMoney([gbp_inr])),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Invoked Custom Function",{{"fnCleanMoney", Int64.Type}}),
+		    #"Trimmed Text" = Table.TransformColumns(#"Changed Type",{{"month", Text.Trim, type text}}),
+		    #"Changed Type with Locale" = Table.TransformColumnTypes(#"Trimmed Text", {{"month", type date}}, "en-US"),
+		    #"Renamed Columns" = Table.RenameColumns(#"Changed Type with Locale",{{"month", "month_start"}}),
+		    #"Removed Columns" = Table.RemoveColumns(#"Renamed Columns",{"gbp_inr"}),
+		    #"Renamed Columns1" = Table.RenameColumns(#"Removed Columns",{{"fnCleanMoney", "gbp_inr"}})
+		in
+		    #"Renamed Columns1"
+	lineageTag: 6e629ad8-84b4-4b6e-94de-ac4c3f9a1019
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression chart_of_accounts =
+		let
+		    Source = stg_FolderFiles,
+		    #"Filtered Rows" = Table.SelectRows(Source, each ([Name] = "chart_of_accounts.csv")),
+		    Content = #"Filtered Rows"{0}[Content],
+		    #"Imported CSV" = Csv.Document(Content,[Delimiter=",", Columns=6, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+		    #"Promoted Headers" = Table.PromoteHeaders(#"Imported CSV", [PromoteAllScalars=true]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Line_Item", type text}, {"Account_Code", Int64.Type}, {"Category", type text}, {"Is_COGS", Int64.Type}, {"Is_OPEX", Int64.Type}, {"Is_EBITDA_Item", Int64.Type}}),
+		    #"Added Index" = Table.AddIndexColumn(#"Changed Type", "Index", 1, 1, Int64.Type),
+		    #"Reordered Columns" = Table.ReorderColumns(#"Added Index",{"Index", "Line_Item", "Account_Code", "Category", "Is_COGS", "Is_OPEX", "Is_EBITDA_Item"}),
+		    #"Renamed Columns" = Table.RenameColumns(#"Reordered Columns",{{"Index", "Line_item_key"}})
+		in
+		    #"Renamed Columns"
+	lineageTag: 367b4221-8065-4f8f-a594-e965dc8f9a4c
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression 'Measures (2)' =
+		let
+		  Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i44FAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Measure = _t]),
+		    #"Removed Columns" = Table.RemoveColumns(Source,{"Measure"})
+		in
+		  #"Removed Columns"
+	lineageTag: 8e9f42aa-8728-4d0f-8995-191c900c8a3f
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression SelectedYear-text = 2025 meta [IsParameterQuery=true, Type="Number", IsParameterQueryRequired=true]
+	lineageTag: e6bd2a2c-67e1-42ef-95f6-8228bb015913
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Number
+
+expression SelectedYear = #date(2025, 1, 1) meta [IsParameterQuery=true, Type="Date", IsParameterQueryRequired=true]
+	lineageTag: 6401d067-1e37-4819-b367-1c2e5dc96ca9
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Date
+

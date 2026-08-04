@@ -1,0 +1,32 @@
+table RLS_Region
+	lineageTag: 53384517-8d20-4ccc-94f8-9185ff266ac0
+
+	column Region
+		lineageTag: 05f97c14-dced-407d-ab93-da24cb0fae1f
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Region]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Email =
+			
+			SWITCH(
+			    RLS_Region[Region],
+			    "UK","John@company.com",
+			    "Europe","Marya@compnay.com",
+			    "US","Mahi@company.com",
+			    "APAC","rahul@company.com")
+		lineageTag: 18bf9f73-fd2a-409f-a973-32c8cdad08b1
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition RLS_Region = calculated
+		mode: import
+		source =
+				
+				DISTINCT(SELECTCOLUMNS(dim_Client,"Region",dim_Client[region]))
+
+	annotation PBI_Id = 3a48bf437fdd49e08ec5574f5f43833a
+

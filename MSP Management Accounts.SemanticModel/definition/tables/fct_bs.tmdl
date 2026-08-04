@@ -1,0 +1,67 @@
+table fct_bs
+	lineageTag: 12ebdb44-8bb8-4f4c-ad12-56b32284d4d9
+
+	column Balance_Sheet_Item
+		dataType: string
+		lineageTag: 19eec4df-1a3c-41ac-9571-e321c8c0c2e8
+		summarizeBy: none
+		sourceColumn: Balance_Sheet_Item
+
+		annotation SummarizationSetBy = Automatic
+
+	column year
+		dataType: int64
+		formatString: 0
+		lineageTag: 0da7fa16-9279-4564-bde7-1086709a8f7e
+		summarizeBy: none
+		sourceColumn: year
+
+		annotation SummarizationSetBy = Automatic
+
+	column qtr
+		dataType: string
+		lineageTag: 29ebf9ce-cd05-4a32-9ce3-7b4071d4ee57
+		summarizeBy: none
+		sourceColumn: qtr
+
+		annotation SummarizationSetBy = Automatic
+
+	column amount
+		dataType: int64
+		formatString: 0
+		lineageTag: 4813ea52-f7ae-49b1-beb3-51e4aab439f7
+		summarizeBy: sum
+		sourceColumn: amount
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Quarter End Date' = SWITCH ( fct_bs[qtr], "Q1", DATE ( fct_bs[year], 3, 31 ), "Q2", DATE ( fct_bs[year], 6, 30 ), "Q3", DATE ( fct_bs[year], 9, 30 ), "Q4", DATE ( fct_bs[year], 12, 31 ) )
+		dataType: dateTime
+		lineageTag: accd6c2c-0cea-4935-a24e-dee1bc641b9d
+
+	partition fct_bs = m
+		mode: import
+		source =
+				let
+				    Source = stg_FolderFiles,
+				    #"Filtered Rows" = Table.SelectRows(Source, each ([Name] = "balance_sheet_quarterly_wide.csv")),
+				    Content = #"Filtered Rows"{0}[Content],
+				    #"Imported CSV" = Csv.Document(Content,[Delimiter=",", Columns=13, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Imported CSV", [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Balance_Sheet_Item", type text}, {"Q1-2023", Int64.Type}, {"Q2-2023", Int64.Type}, {"Q3-2023", Int64.Type}, {"Q4-2023", type text}, {"Q1-2024", Int64.Type}, {"Q2-2024", Int64.Type}, {"Q3-2024", Int64.Type}, {"Q4-2024", Int64.Type}, {"Q1-2025", type text}, {"Q2-2025", Int64.Type}, {"Q3-2025", Int64.Type}, {"Q4-2025", Int64.Type}}),
+				    #"Unpivoted Other Columns" = Table.UnpivotOtherColumns(#"Changed Type", {"Balance_Sheet_Item"}, "Attribute", "Value"),
+				    #"Split Column by Delimiter" = Table.SplitColumn(#"Unpivoted Other Columns", "Attribute", Splitter.SplitTextByEachDelimiter({"-"}, QuoteStyle.Csv, false), {"Attribute.1", "Attribute.2"}),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Split Column by Delimiter",{{"Attribute.1", type text}, {"Attribute.2", Int64.Type}}),
+				    #"Invoked Custom Function" = Table.AddColumn(#"Changed Type1", "fnCleanText", each fnCleanText([Attribute.2])),
+				    #"Invoked Custom Function1" = Table.AddColumn(#"Invoked Custom Function", "fnCleanText.1", each fnCleanText([Attribute.1])),
+				    #"Invoked Custom Function2" = Table.AddColumn(#"Invoked Custom Function1", "fnCleanMoney", each fnCleanMoney([Value])),
+				    #"Removed Columns" = Table.RemoveColumns(#"Invoked Custom Function2",{"Attribute.1", "Attribute.2", "Value"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"fnCleanMoney", "amount"}, {"fnCleanText.1", "qtr"}, {"fnCleanText", "year"}}),
+				    #"Changed Type2" = Table.TransformColumnTypes(#"Renamed Columns",{{"year", Int64.Type}, {"qtr", type text}, {"amount", Int64.Type}})
+				in
+				    #"Changed Type2"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

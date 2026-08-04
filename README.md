@@ -1,12 +1,25 @@
-# MSP Management Accounts — Power BI Finance Dashboard
+<div align="center">
 
-A management-accounts and financial-analytics dashboard for a **Managed Service Provider (MSP)** — the kind of business that runs outsourced **NOC / SOC / Service Desk** operations. Built in **Power BI** using the source-control-friendly **PBIP / TMDL** format.
+# 📊 MSP Management Accounts
+### A Power BI finance dashboard for a Managed Service Provider
 
-> ⚠️ **Sample data.** All figures are **synthetic**, generated purely for demonstration. No real company data is included.
+*Billing hours · P&L · Balance sheet — unified into one board-ready model where **every number reconciles to the audited accounts**.*
+
+![Power BI](https://img.shields.io/badge/Power%20BI-F2C811?style=for-the-badge&logo=powerbi&logoColor=black)
+![DAX](https://img.shields.io/badge/DAX-0B5394?style=for-the-badge)
+![PBIP · TMDL](https://img.shields.io/badge/PBIP%20%C2%B7%20TMDL-0078D4?style=for-the-badge&logo=microsoft&logoColor=white)
+![Power Query](https://img.shields.io/badge/Power%20Query%20(M)-116149?style=for-the-badge)
+![PL-300](https://img.shields.io/badge/Microsoft-PL--300%20Certified-2E8B57?style=for-the-badge)
+
+</div>
+
+> ⚠️ **Synthetic data** — all figures are generated for demonstration. No real company data is included.
 
 ---
 
 ## 🖼️ Preview
+
+<div align="center">
 
 | Executive Summary | P&L / Management Accounts | Profitability & Margin |
 |:---:|:---:|:---:|
@@ -14,48 +27,91 @@ A management-accounts and financial-analytics dashboard for a **Managed Service 
 | **Utilisation** | **Balance Sheet & Cash** | |
 | ![Utilisation](screenshots/04-utilisation.png) | ![Balance Sheet](screenshots/05-balance-sheet.png) | |
 
+</div>
+
 ---
 
-## 📊 What it does
-It unifies the three things an MSP finance team cares about into one governed **star-schema** model:
+## ✨ Why this project is interesting
 
-- **Billing / resource hours** → utilisation and delivery cost
-- **Profit & Loss** → revenue, cost of delivery, overheads, EBITDA, net profit
-- **Balance sheet** → cash, receivables, working capital, DSO
+> An MSP earns money by billing hours — but its finance team thinks in P&L, margin and cash. This model bridges the two, and does it **without ever contradicting the audited accounts**.
 
-…and turns them into a board-ready set of six report pages — every figure reconciling back to one audited revenue total (~£40M across 36 months of sample data).
+- 🎯 **Reconciled by design** — every client, service and month ties back to one audited revenue total (~£40M across 36 months).
+- 🧠 **Smart revenue allocation** — where per-account revenue isn't reliable, the audited P&L is split by each account's **share of billable value**, and cost by its **share of actual delivery cost** — so margins vary *realistically* instead of collapsing to a flat average.
+- 📐 **Real modelling depth** — semi-additive balance-sheet measures, a sign-convention P&L, common-size analysis, **Row-Level Security**, and full time intelligence (YoY, MoM, fiscal YTD, rolling 12-month, moving average).
+- 🔍 **Insight, not just charts** — Key Influencers and a Decomposition Tree turn "what happened" into "why", and the design surfaces data-quality anomalies rather than hiding them.
+- 🗂️ **Source-control friendly** — built in the **PBIP / TMDL** format, so the entire model and report are readable, diff-able text you can review right here on GitHub.
 
-## 🧩 Data model (star schema)
-**Fact tables:** `fct_pnl` (P&L), `fct_Billing` (hours by client × service × month), `fct_bs` (quarterly balance sheet), `fct_target` (budget)
-**Dimensions:** `dim_Client`, `dim_service`, `dim_date`, `dim_PnLCategory`
+---
 
-Single-direction relationships, a conformed date dimension, and no fact-to-fact joins.
+## 🧩 Data model — a clean star schema
+
+```mermaid
+erDiagram
+    dim_date       ||--o{ fct_pnl     : ""
+    dim_date       ||--o{ fct_Billing : ""
+    dim_date       ||--o{ fct_bs      : ""
+    dim_date       ||--o{ fct_target  : ""
+    dim_Client     ||--o{ fct_Billing : ""
+    dim_service    ||--o{ fct_Billing : ""
+    dim_PnLCategory ||--o{ fct_pnl    : ""
+```
+
+| Fact tables | Grain | | Dimensions |
+|---|---|---|---|
+| `fct_pnl` | month × category × line item | | `dim_Client` — region, tier, industry, AM |
+| `fct_Billing` | client × service × month | | `dim_service` — rate, target margin |
+| `fct_bs` | balance-sheet item × quarter | | `dim_date` — conformed calendar |
+| `fct_target` | metric × month (budget) | | `dim_PnLCategory` — P&L ordering |
+
+*Single-direction relationships · conformed date dimension · no fact-to-fact joins.*
+
+---
 
 ## 📑 Report pages
-1. **Executive Summary** — KPI cards, revenue-vs-target trend, utilisation gauge, revenue mix
-2. **P&L / Management Accounts** — common-size P&L matrix + a revenue-to-profit waterfall
-3. **Profitability & Margin** — margin by service vs target, profitability quadrant
-4. **Utilisation** — utilisation by service, Key Influencers, decomposition tree
-5. **Balance Sheet & Cash** — cash, AR, deferred revenue, working capital, DSO
+
+| # | Page | What it answers |
+|---|------|-----------------|
+| 1 | **Executive Summary** | Are we growing, profitable and on target? |
+| 2 | **P&L / Management Accounts** | Where does each £ of revenue go? *(common-size P&L + waterfall)* |
+| 3 | **Profitability & Margin** | Which services actually make money? *(margin vs target + quadrant)* |
+| 4 | **Utilisation** | Are we using the capacity we pay for? *(gauge, Key Influencers, decomposition tree)* |
+| 5 | **Balance Sheet & Cash** | Is the business healthy underneath the profit? *(cash, AR, working capital, DSO)* |
+
+---
 
 ## 🧮 DAX highlights
-- **Revenue allocation** — where per-client / per-service revenue isn't directly available, the audited P&L revenue is allocated by each account's **share of billable value**, and cost by its **share of actual delivery cost** — so margins vary realistically, yet every slice still reconciles to the audited total.
+
+- **Revenue allocation** — split the audited P&L by each account's share of billable value; cost by its share of actual cost → realistic, reconciled margins.
 - **Semi-additive balance sheet** — cash / receivables read at the latest **quarter-end** (closing balance), never summed across periods.
-- **Sign-convention P&L** — gross profit and EBITDA derived from a signed P&L (costs stored negative), so subtotals are simple sums.
-- **Common-size P&L** — every line expressed as a % of revenue.
-- **Time intelligence** — YoY, MoM, fiscal YTD, rolling 12-month (LTM), and a 3-month moving average.
+- **Sign-convention P&L** — gross profit & EBITDA derived from a signed P&L (costs stored negative), so subtotals are simple sums.
+- **Common-size P&L** — every line as a % of revenue, using `REMOVEFILTERS` so the denominator stays total revenue.
+- **Time intelligence** — `SAMEPERIODLASTYEAR`, `TOTALYTD` (fiscal), `DATESINPERIOD` (rolling 12-month), and a 3-month moving average.
 
-## ▶️ How to run
-The synthetic data is included in the **`/data`** folder, so the report is fully reproducible.
+---
 
-1. Clone this repo.
-2. Open **`MSP Management Accounts.pbip`** in Power BI Desktop (Dec 2023 or later).
+## ▶️ Run it yourself
+
+The synthetic data is included under **`/data`**, so the report is fully reproducible.
+
+1. **Clone** this repo.
+2. **Open** `MSP Management Accounts.pbip` in Power BI Desktop (Dec 2023 or later).
 3. Set the **`pFolder`** parameter to the path of the **`data`** folder in your clone — *Home → Transform data → `pFolder` → Current Value* — then **Refresh**.
 
-Source files (in `/data`): `income_statement_wide.csv`, `billing/resource_billing_2023–2025.csv`, `balance_sheet_quarterly_wide.csv`, `clients.csv`, `service_lines.csv`, `targets_long.csv`, `fx_rates.csv`, `chart_of_accounts.csv`.
+---
 
 ## 🛠️ Built with
-Power BI Desktop · PBIP project format · TMDL semantic model · DAX · Power Query (M)
 
-## 👤 Author
-**Rishav Kumar** — Power BI Developer / Data Analyst · Microsoft **PL-300** certified.
+Power BI Desktop · **PBIP** project format · **TMDL** semantic model · **DAX** · **Power Query (M)** · Row-Level Security
+
+---
+
+<div align="center">
+
+### 👤 Author
+
+**Rishav Kumar** — Power BI Developer / Data Analyst
+Microsoft **PL-300** Certified · ~5 years in data analytics (legal & healthcare domain)
+
+⭐ *If you find this useful, a star is always appreciated!*
+
+</div>

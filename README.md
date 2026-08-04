@@ -11,8 +11,8 @@ A management-accounts and financial-analytics dashboard for a **Managed Service 
 | Executive Summary | P&L / Management Accounts | Profitability & Margin |
 |:---:|:---:|:---:|
 | ![Executive Summary](screenshots/01-executive-summary.png) | ![P&L](screenshots/02-pnl.png) | ![Profitability](screenshots/03-profitability.png) |
-| **Client Profitability** | **Utilisation** | **Balance Sheet & Cash** |
-| ![Client Profitability](screenshots/04-client-profitability.png) | ![Utilisation](screenshots/05-utilisation.png) | ![Balance Sheet](screenshots/06-balance-sheet.png) |
+| **Utilisation** | **Balance Sheet & Cash** | |
+| ![Utilisation](screenshots/04-utilisation.png) | ![Balance Sheet](screenshots/05-balance-sheet.png) | |
 
 ---
 
@@ -35,9 +35,8 @@ Single-direction relationships, a conformed date dimension, and no fact-to-fact 
 1. **Executive Summary** — KPI cards, revenue-vs-target trend, utilisation gauge, revenue mix
 2. **P&L / Management Accounts** — common-size P&L matrix + a revenue-to-profit waterfall
 3. **Profitability & Margin** — margin by service vs target, profitability quadrant
-4. **Client Profitability** — client table, concentration analysis, drill-through
-5. **Utilisation** — utilisation by service, Key Influencers, decomposition tree
-6. **Balance Sheet & Cash** — cash, AR, deferred revenue, working capital, DSO
+4. **Utilisation** — utilisation by service, Key Influencers, decomposition tree
+5. **Balance Sheet & Cash** — cash, AR, deferred revenue, working capital, DSO
 
 ## 🧮 DAX highlights
 - **Revenue allocation** — where per-client / per-service revenue isn't directly available, the audited P&L revenue is allocated by each account's **share of billable value**, and cost by its **share of actual delivery cost** — so margins vary realistically, yet every slice still reconciles to the audited total.

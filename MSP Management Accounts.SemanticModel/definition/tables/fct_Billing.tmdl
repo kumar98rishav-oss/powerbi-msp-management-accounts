@@ -17,6 +17,7 @@ table fct_Billing
 			)
 		formatString: \$#,##0
 		displayFolder: Metrics
+		lineageTag: 954262ae-5c50-4d00-916a-c741a70efba0
 
 	column Month_start
 		dataType: string

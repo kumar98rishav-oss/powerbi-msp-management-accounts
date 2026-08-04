@@ -1,4 +1,4 @@
-expression pFolder = "C:\MSP-Finance\data" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+expression pFolder = "E:\Data Analyst\POWER BI\powerbi-msp-management-accounts\data" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
 	lineageTag: a853832a-1096-4491-ac30-020a40025c23
 
 	annotation PBI_NavigationStepName = Navigation

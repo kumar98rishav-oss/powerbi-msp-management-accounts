@@ -43,7 +43,7 @@
               },
               "queryRef": "fct_pnl.Line_Item",
               "nativeQueryRef": "Line_Item",
-              "active": false
+              "active": true
             }
           ]
         },
@@ -91,7 +91,6 @@
             "queryRefs": [
               "fct_pnl.Category"
             ],
-            "isCollapsed": true,
             "identityKeys": [
               {
                 "Column": {

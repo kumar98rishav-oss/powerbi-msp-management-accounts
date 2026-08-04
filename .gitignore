@@ -1,2 +1,2 @@
-**/.pbi/localSettings.json
-**/.pbi/cache.abf
+# Power BI local editor settings and cache (machine-specific)
+**/.pbi/

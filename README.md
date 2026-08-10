@@ -35,7 +35,7 @@
 
 An interactive **dependency map** of the whole model — trace a single billable hour through **utilisation → billable rate → revenue → P&L → cash → the balance sheet**, filter by year, and read the plain-English story (and the *"so what would you do about it"*) behind every figure.
 
-### ▶ **[Open the interactive value map »](https://raw.githack.com/kumar98rishav-oss/powerbi-msp-management-accounts/main/value-map.html)**
+### ▶ **[Open the interactive value map »](https://kumar98rishav-oss.github.io/powerbi-msp-management-accounts/value-map.html)**
 
 Six linked views on the same synthetic figures:
 

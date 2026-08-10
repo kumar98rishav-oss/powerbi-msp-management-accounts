@@ -24,8 +24,8 @@
 | Executive Summary | P&L / Management Accounts | Profitability & Margin |
 |:---:|:---:|:---:|
 | ![Executive Summary](screenshots/01-executive-summary.png) | ![P&L](screenshots/02-pnl.png) | ![Profitability](screenshots/03-profitability.png) |
-| **Utilisation** | **Balance Sheet & Cash** | |
-| ![Utilisation](screenshots/04-utilisation.png) | ![Balance Sheet](screenshots/05-balance-sheet.png) | |
+| **Utilisation & Delivery** | **Balance Sheet & Cash** | **The Client Ledger** |
+| ![Utilisation](screenshots/04-utilisation.png) | ![Balance Sheet](screenshots/05-balance-sheet.png) | ![Client Ledger](screenshots/06-client-ledger.png) |
 
 </div>
 

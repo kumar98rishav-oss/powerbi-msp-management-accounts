@@ -31,6 +31,20 @@
 
 ---
 
+## 🔗 Live interactive value map
+
+An interactive **dependency map** of the whole model — trace a single billable hour through **utilisation → billable rate → revenue → P&L → cash → the balance sheet**, filter by year, and read the plain-English story (and the *"so what would you do about it"*) behind every figure.
+
+### ▶ **[Open the interactive value map »](https://raw.githack.com/kumar98rishav-oss/powerbi-msp-management-accounts/main/value-map.html)**
+
+Six linked views on the same synthetic figures:
+
+**Value Flow** · **Service Lines** · **Clients** · **Regions** · **P&L** *(waterfall vs plan)* · **Balance Sheet** *(Assets = Liabilities + Equity)*
+
+*Self-contained HTML — no install, opens in any browser. Source: [`value-map.html`](value-map.html).*
+
+---
+
 ## ✨ Why this project is interesting
 
 > An MSP earns money by billing hours — but its finance team thinks in P&L, margin and cash. This model bridges the two, and does it **without ever contradicting the audited accounts**.

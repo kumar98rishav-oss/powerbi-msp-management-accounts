@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+</head>
+<body>
+<title>Where Your Value Comes From — MSP Management Accounts</title>
+<style>
+  :root{
+    color-scheme:light;
+    --bg:#F5EFE3; --surface:#FCF8F0; --surface-2:#F1EADC;
+    --ink:#3B2D23; --ink-2:#7A6A5C; --ink-3:#A99A88; --divider:#E7DCC9;
+    --accent:#C4712F;
+    --delivery:#BE9A2E;  --delivery-bg:#FBF3D9;  --delivery-bd:#E7D28E;  --delivery-val:#846713;
+    --income:#C67139;    --income-bg:#FFF2EB;    --income-bd:#F3C9A9;    --income-val:#8C491A;
+    --asset:#7A8A5E;     --asset-bg:#F0FAE1;     --asset-bd:#C7D9AC;     --asset-val:#55633C;
+    --liability:#8F8064; --liability-bg:#EFE6D3; --liability-bd:#D8C9AC; --liability-val:#5F5647;
+    --metric:#9A8A63;    --metric-bg:#FAF5EA;    --metric-bd:#CDBB92;    --metric-val:#6F6244;
+    --edge:#BCA88E; --edge-dim:#DCD1BF;
+    --in:#74895A; --in-ring:rgba(116,137,90,.22); --in-bg:#EEF8DE; --in-bd:#C7D9AC; --in-val:#4F6234;
+    --out:#C4712F; --out-ring:rgba(196,113,47,.22); --out-bg:#FFF1E8; --out-bd:#F3C9A9; --out-val:#8C491A;
+    --shadow:0 1px 2px rgba(90,68,45,.05),0 3px 9px rgba(90,68,45,.05);
+    --shadow-md:0 7px 20px rgba(90,68,45,.13);
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;font-size:15px;line-height:1.5}
+  .app{display:flex;flex-direction:column;height:100vh;min-height:560px}
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:22px;
+    padding:16px 26px 14px;border-bottom:1px solid var(--divider);flex:none;flex-wrap:wrap;background:var(--surface)}
+  .eyebrow{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  h1{font-family:var(--serif);font-weight:700;font-size:32px;line-height:1.02;margin:5px 0 5px;letter-spacing:-.005em;text-wrap:balance;color:var(--ink)}
+  .sub{margin:0;font-size:13px;max-width:730px;color:var(--ink-2);text-wrap:pretty}
+  .controls{display:flex;align-items:center;gap:8px;flex:none;flex-wrap:wrap}
+  .segwrap{display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+  .seglab{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:700;padding-left:4px}
+  .segmented{display:inline-flex;background:var(--surface-2);border:1px solid var(--divider);border-radius:999px;padding:3px;gap:2px}
+  .seg{font-family:var(--sans);font-size:12px;font-weight:600;border:none;background:transparent;color:var(--ink-2);
+    padding:6px 12px;border-radius:999px;cursor:pointer;transition:background .14s,color .14s}
+  .seg:hover{color:var(--ink)}
+  .seg.on{background:var(--accent);color:#FBF4E6;box-shadow:var(--shadow)}
+  .btn{font-family:var(--sans);font-size:12.5px;font-weight:600;border-radius:999px;padding:8px 15px;cursor:pointer;
+    border:1px solid var(--ink-3);background:transparent;color:var(--ink);white-space:nowrap;transition:background .15s,border-color .15s}
+  .btn:hover{background:var(--surface-2);border-color:var(--ink-2)}
+  .btn.accent{border-color:transparent;background:transparent;color:var(--accent);font-weight:700}
+  .btn.accent:hover{background:var(--surface-2)}
+  .btn:focus-visible,.seg:focus-visible,.node:focus-visible,.chip:focus-visible,.back:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+  main{flex:1;display:flex;min-height:0}
+  .wrap{flex:1;overflow:auto;position:relative;padding:16px}
+  .stage{position:relative;margin:0 auto}
+  .canvas{position:absolute;top:0;left:0;transform-origin:top left}
+  .band{position:absolute;border-radius:24px;border:1px dashed;pointer-events:none;z-index:0}
+  .zlabel{position:absolute;pointer-events:none;z-index:1}
+  .zlabel .zt{font-family:var(--serif);font-size:16px;font-weight:700}
+  .zlabel .zs{font-size:10.5px;color:var(--ink-2)}
+  svg.edges{position:absolute;top:0;left:0;overflow:visible;pointer-events:none;z-index:1}
+  .edge{fill:none;stroke-linecap:round;transition:stroke .15s,stroke-opacity .15s,stroke-width .15s}
+  .edge-base{stroke:var(--edge);stroke-opacity:.7;stroke-width:1.5px;marker-end:url(#mk-def)}
+  .edge-in{stroke:var(--in);stroke-width:2.6px;marker-end:url(#mk-in)}
+  .edge-out{stroke:var(--out);stroke-width:2.6px;marker-end:url(#mk-out)}
+  .edge-dim{stroke:var(--edge-dim);stroke-opacity:.32;stroke-width:1px;marker-end:url(#mk-dim)}
+  #mk-def path{fill:var(--edge)} #mk-dim path{fill:var(--edge-dim)}
+  #mk-in path{fill:var(--in)} #mk-out path{fill:var(--out)}
+  .elabel{position:absolute;transform:translate(-50%,-50%);border-radius:999px;padding:3px 10px;font-size:11px;
+    font-weight:600;white-space:nowrap;pointer-events:none;z-index:9;box-shadow:var(--shadow)}
+  .elabel.in{background:var(--in-bg);color:var(--in-val);border:1px solid var(--in-bd)}
+  .elabel.out{background:var(--out-bg);color:var(--out-val);border:1px solid var(--out-bd)}
+  .node{position:absolute;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:1px;
+    text-align:left;border:1.5px solid var(--catbd);background:var(--catbg);color:var(--ink);border-radius:16px;
+    padding:9px 14px;cursor:pointer;font-family:var(--sans);box-shadow:var(--shadow);z-index:2;
+    transition:transform .16s ease,box-shadow .16s ease,opacity .16s ease,background .16s ease,border-color .16s ease}
+  .node[data-cat="delivery"]{--cat:var(--delivery);--catbg:var(--delivery-bg);--catbd:var(--delivery-bd);--catval:var(--delivery-val)}
+  .node[data-cat="income"]{--cat:var(--income);--catbg:var(--income-bg);--catbd:var(--income-bd);--catval:var(--income-val)}
+  .node[data-cat="asset"]{--cat:var(--asset);--catbg:var(--asset-bg);--catbd:var(--asset-bd);--catval:var(--asset-val)}
+  .node[data-cat="liability"]{--cat:var(--liability);--catbg:var(--liability-bg);--catbd:var(--liability-bd);--catval:var(--liability-val)}
+  .node[data-cat="metric"]{--cat:var(--metric);--catbg:var(--metric-bg);--catbd:var(--metric-bd);--catval:var(--metric-val)}
+  .node[data-cat="equity"]{--cat:var(--delivery);--catbg:var(--delivery-bg);--catbd:var(--delivery-bd);--catval:var(--delivery-val)}
+  .node[data-tier="metric"]{border-style:dashed}
+  .node[data-tier="supporting"]{padding:6px 12px;border-radius:13px}
+  .n-label{font-weight:650;font-size:13px;line-height:1.12;letter-spacing:-.01em}
+  .node[data-tier="supporting"] .n-label{font-size:11px}
+  .node[data-tier="hero"] .n-label{font-size:15px}
+  .n-sub{font-size:9.5px;color:var(--ink-2);line-height:1.15}
+  .n-val{font-family:var(--serif);font-weight:700;font-size:14px;color:var(--catval);margin-top:2px;font-variant-numeric:tabular-nums}
+  .node[data-tier="supporting"] .n-val{font-size:12px}
+  .node[data-tier="hero"] .n-val{font-size:15.5px}
+  .node:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+  .node.active{background:var(--cat);border-color:var(--cat);color:#FBF4E6;z-index:7;box-shadow:0 13px 30px rgba(46,35,26,.32)}
+  .node.active .n-sub{color:rgba(251,244,230,.82)}
+  .node.active .n-val{color:#FBF4E6}
+  .node.source{border-color:var(--in);border-width:2.5px;box-shadow:0 0 0 4px var(--in-ring),var(--shadow-md);z-index:6}
+  .node.target{border-color:var(--out);border-width:2.5px;box-shadow:0 0 0 4px var(--out-ring),var(--shadow-md);z-index:6}
+  .node.dim{opacity:.26}
+  .node.dim:hover{opacity:.5}
+  aside{width:388px;flex:none;border-left:1px solid var(--divider);overflow:auto;background:var(--surface-2)}
+  .pad{padding:20px 22px 44px}
+  .a-eyebrow{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:8px}
+  .a-p{font-size:13.5px;line-height:1.55;margin:0 0 14px;color:var(--ink);text-wrap:pretty}
+  .muted{color:var(--ink-2)}
+  b.in{color:var(--in-val)} b.out{color:var(--out-val)}
+  .legend{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+  .legend .li{display:flex;align-items:center;gap:11px;font-size:12.5px}
+  .lline{width:26px;height:0;border-top:3px solid;flex:none;border-radius:2px}
+  .ldot{width:12px;height:12px;border-radius:4px;flex:none}
+  hr.rule{border:none;border-top:1px solid var(--divider);margin:16px 0}
+  .stmt{background:var(--surface);border:1px solid var(--divider);border-radius:16px;padding:13px 15px;margin-bottom:11px}
+  .stmt h4{font-family:var(--serif);font-size:14px;margin:0 0 7px;font-weight:700}
+  .row{display:flex;justify-content:space-between;font-size:12.5px;padding:2.5px 0;gap:12px}
+  .row .n{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .row.minor{color:var(--ink-2)}
+  .row.gp{color:var(--income-val);font-weight:700;border-top:1px solid var(--divider);margin-top:2px;padding-top:4px}
+  .row.eb{color:var(--asset-val)}
+  .row.wc{color:var(--asset-val);font-weight:700;border-top:1px solid var(--divider);margin-top:2px;padding-top:4px}
+  .row.np{color:var(--income-val);font-weight:700;border-top:2px solid var(--accent);margin-top:2px;padding-top:5px;font-size:13.5px}
+  .back{background:none;border:none;color:var(--ink-2);font-family:var(--sans);font-size:12.5px;font-weight:600;
+    cursor:pointer;padding:2px 0;margin-bottom:10px}
+  .back:hover{color:var(--ink)}
+  .catrow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .catrow .dot{width:11px;height:11px;border-radius:50%;flex:none}
+  .catrow .ct{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-weight:700}
+  .pchip{margin-left:auto;font-size:10px;font-weight:700;color:var(--accent);background:var(--out-bg);border:1px solid var(--out-bd);border-radius:999px;padding:2px 8px;letter-spacing:.03em}
+  .s-label{font-family:var(--serif);font-size:28px;line-height:1.02;margin:0 0 1px;font-weight:700}
+  .s-sub{font-size:12.5px;color:var(--ink-2);margin-bottom:9px}
+  .s-val{font-family:var(--serif);font-weight:700;font-size:27px;margin:6px 0 13px;font-variant-numeric:tabular-nums}
+  .s-plain{font-size:13.5px;line-height:1.56;margin:0 0 15px;text-wrap:pretty}
+  .fbox-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin-bottom:6px;font-weight:700}
+  .fbox{background:var(--surface);border:1px dashed var(--accent);border-radius:13px;padding:11px 14px;font-size:14.5px;font-weight:700}
+  .fcalc{font-size:12.5px;color:var(--ink-2);margin-top:7px}
+  .fcalc b{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:700}
+  .chips-wrap{margin-bottom:13px}
+  .chips-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px;font-weight:700}
+  .chips-label.in{color:var(--in-val)} .chips-label.out{color:var(--out-val)}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{display:inline-flex;align-items:center;border-radius:999px;padding:6px 13px;font-size:12.5px;cursor:pointer;
+    font-family:var(--sans);font-weight:600;transition:filter .14s}
+  .chip.in{border:1px solid var(--in-bd);background:var(--in-bg);color:var(--in-val)}
+  .chip.out{border:1px solid var(--out-bd);background:var(--out-bg);color:var(--out-val)}
+  .chip:hover{filter:brightness(.97)}
+  .tabrow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}
+  .tabs{display:inline-flex;background:var(--surface-2);border:1px solid var(--divider);border-radius:999px;padding:3px;gap:2px}
+  .tab{font-family:var(--sans);font-size:12px;font-weight:600;border:none;background:transparent;color:var(--ink-2);padding:5px 15px;border-radius:999px;cursor:pointer;transition:background .14s,color .14s}
+  .tab:hover{color:var(--ink)}
+  .tab.on{background:var(--accent);color:#FBF4E6}
+  .tab:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+  .ins-block{margin-bottom:13px}
+  .ins-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+  .ins-label::before{content:"";width:7px;height:7px;border-radius:50%;flex:none;background:currentColor}
+  .ins-label.hap{color:var(--accent)} .ins-label.why{color:var(--liability-val)} .ins-label.lev{color:var(--in-val)}
+  .ins-p{font-size:13.5px;line-height:1.55;margin:0;text-wrap:pretty;color:var(--ink)}
+  .ins-qa{background:var(--surface);border:1px solid var(--divider);border-left:3px solid var(--accent);border-radius:12px;padding:11px 14px;margin-top:15px}
+  .ins-qa-h{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:6px}
+  .ins-q{font-weight:700;font-size:13.5px;color:var(--ink);margin-bottom:6px;font-style:italic;line-height:1.4}
+  .ins-a{font-size:13px;line-height:1.52;color:var(--ink-2)}
+  .statline{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+  .stat{background:var(--surface);border:1px solid var(--divider);border-radius:10px;padding:7px 11px;min-width:74px}
+  .stat .k{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);font-weight:700;margin-bottom:1px}
+  .stat .v{font-family:var(--serif);font-weight:700;font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .mini{margin-top:16px;padding-top:14px;border-top:1px solid var(--divider)}
+  .mini-h{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-weight:700;margin-bottom:10px}
+  .mbar{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:11.5px}
+  .mbar-l{width:112px;flex:none;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mbar-t{flex:1;height:7px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+  .mbar-f{display:block;height:100%;border-radius:4px}
+  .mbar-v{width:58px;flex:none;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2);font-weight:700}
+  .viewbar{display:flex;gap:2px;padding:0 22px;background:var(--surface);border-bottom:1px solid var(--divider);flex:none;overflow-x:auto}
+  .viewtab{font-family:var(--sans);font-size:13px;font-weight:600;border:none;background:transparent;color:var(--ink-2);padding:11px 15px;cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;transition:color .14s,border-color .14s}
+  .viewtab:hover{color:var(--ink)}
+  .viewtab.on{color:var(--accent);border-bottom-color:var(--accent)}
+  .viewtab:focus-visible{outline:2.5px solid var(--accent);outline-offset:-3px}
+  .lenswrap{padding:8px 8px 34px}
+  .lens-inner{max-width:772px;margin:0 auto}
+  .lens-h{font-family:var(--serif);font-size:22px;font-weight:700;margin:6px 0 3px;letter-spacing:-.005em}
+  .lens-sub{font-size:12px;color:var(--ink-2);margin-bottom:16px}
+  .lens-banner{background:var(--income-bg);border:1px solid var(--income-bd);border-left:3px solid var(--accent);border-radius:13px;padding:12px 16px;margin-bottom:18px;font-size:13.5px;line-height:1.55;color:var(--ink)}
+  .lens-banner b{color:var(--income-val)}
+  .lrow{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--divider);border-radius:14px;padding:12px 15px;margin-bottom:9px;cursor:pointer;font-family:var(--sans);transition:border-color .14s,box-shadow .14s,transform .14s}
+  .lrow:hover{border-color:var(--ink-3);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+  .lrow.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--out-ring)}
+  .lrow-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:7px}
+  .lrow-name{font-weight:700;font-size:14px;color:var(--ink)}
+  .lrow-rev{font-family:var(--serif);font-weight:700;font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .lrow-bar{height:8px;border-radius:5px;background:var(--surface-2);overflow:hidden;margin-bottom:9px}
+  .lrow-fill{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 55%,var(--asset)))}
+  .lrow-meta{display:flex;flex-wrap:wrap;gap:7px;align-items:center;font-size:11.5px}
+  .ltag{background:var(--surface-2);border:1px solid var(--divider);border-radius:999px;padding:2px 9px;color:var(--ink-2);font-weight:600}
+  .lchip{border-radius:999px;padding:2px 9px;font-weight:700}
+  .lchip.good{background:var(--in-bg);border:1px solid var(--in-bd);color:var(--in-val)}
+  .lchip.watch{background:var(--out-bg);border:1px solid var(--out-bd);color:var(--out-val)}
+  .lchip.neut{background:var(--surface-2);border:1px solid var(--divider);color:var(--ink-2)}
+  .bsviz{display:flex;align-items:stretch;justify-content:center;gap:16px;margin:10px 0 22px}
+  .bscol{display:flex;flex-direction:column;width:158px}
+  .bscol-h{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:700;text-align:center;margin-bottom:6px}
+  .bsbar{height:250px;display:flex;flex-direction:column;border-radius:11px;overflow:hidden;border:1px solid var(--divider)}
+  .bsseg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:#FBF4E6;text-align:center;overflow:hidden;padding:2px 4px;box-shadow:inset 0 -1px 0 rgba(255,255,255,.28)}
+  .bsseg .sn{font-size:11px;font-weight:700;letter-spacing:.02em}
+  .bsseg .sv{font-family:var(--serif);font-size:16px;font-weight:700}
+  .bscol-t{text-align:center;font-family:var(--serif);font-weight:700;font-size:15px;margin-top:7px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .bseq{display:flex;align-items:center;font-family:var(--serif);font-size:30px;color:var(--ink-3);font-weight:700;padding-bottom:26px}
+  .bsident{background:var(--surface);border:1px solid var(--divider);border-left:3px solid var(--asset);border-radius:12px;padding:11px 15px;text-align:center;font-family:var(--serif);font-weight:700;font-size:14.5px;margin-top:8px;color:var(--ink)}
+  .bsident .ok{color:var(--in-val)}
+  .row.tot{font-weight:700;border-top:1px solid var(--divider);margin-top:3px;padding-top:5px;color:var(--ink)}
+  .wf{margin:2px 0 8px}
+  .wfrow{display:flex;align-items:center;gap:10px;padding:3px 0;font-size:12px}
+  .wfrow.sub{font-weight:700}
+  .wfrow.sub .wf-track{height:21px}
+  .wf-l{width:176px;flex:none;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .wf-track{flex:1;position:relative;height:17px;background:var(--surface-2);border-radius:4px}
+  .wf-bar{position:absolute;top:0;bottom:0;border-radius:3px}
+  .wf-tick{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);border-radius:2px}
+  .wf-v{width:152px;flex:none;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink);white-space:nowrap}
+  .wf-chip{display:inline-block;border-radius:999px;padding:1px 7px;font-size:10px;font-weight:700;margin-left:6px}
+  .wf-chip.hit{background:var(--in-bg);border:1px solid var(--in-bd);color:var(--in-val)}
+  .wf-chip.miss{background:var(--out-bg);border:1px solid var(--out-bd);color:var(--out-val)}
+  .hint{font-size:11.5px;color:var(--ink-3);margin-top:10px}
+  .wrap::-webkit-scrollbar,aside::-webkit-scrollbar{width:10px;height:10px}
+  .wrap::-webkit-scrollbar-thumb,aside::-webkit-scrollbar-thumb{background:var(--divider);border-radius:6px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  @media (max-width:900px){
+    main{flex-direction:column}
+    aside{width:auto;border-left:none;border-top:1px solid var(--divider);max-height:46vh}
+    h1{font-size:26px}
+  }
+</style>
+
+<div class="app">
+  <header>
+    <div>
+      <div class="eyebrow">MSP Management Accounts</div>
+      <h1>Where your value comes from</h1>
+      <p class="sub">A dependency map of the numbers your dashboard runs on &mdash; traced from a single billable hour through to profit and cash, on your <b>real figures</b>. Switch between the full 3-year view and any single year, then tap a term.</p>
+    </div>
+    <div class="controls">
+      <div class="segwrap">
+        <span class="seglab">Period</span>
+        <div class="segmented" id="seg">
+          <button class="seg on" data-p="all" type="button">3-yr</button>
+          <button class="seg" data-p="y2023" type="button">2023</button>
+          <button class="seg" data-p="y2024" type="button">2024</button>
+          <button class="seg" data-p="y2025" type="button">2025</button>
+        </div>
+      </div>
+      <button class="btn" id="btnFig" type="button">Hide figures</button>
+      <button class="btn accent" id="btnReset" type="button">Reset view</button>
+    </div>
+  </header>
+  <div class="viewbar" id="viewbar">
+    <button class="viewtab on" data-lens="flow" type="button">Value Flow</button>
+    <button class="viewtab" data-lens="svc" type="button">Service Lines</button>
+    <button class="viewtab" data-lens="client" type="button">Clients</button>
+    <button class="viewtab" data-lens="region" type="button">Regions</button>
+    <button class="viewtab" data-lens="pnl" type="button">P&amp;L</button>
+    <button class="viewtab" data-lens="bs" type="button">Balance Sheet</button>
+  </div>
+  <main>
+    <div class="wrap" id="wrap">
+      <div class="stage" id="stage">
+        <div class="canvas" id="canvas"></div>
+      </div>
+      <div class="lenswrap" id="lenswrap" style="display:none"></div>
+    </div>
+    <aside id="aside"><div class="pad" id="pad"></div></aside>
+  </main>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var CW=1660, CH=870;
+
+  // ---- real figures pulled live from the model (amounts only; ratios derived) ----
+  var FIG={
+    all:{lab:"3-year",revenue:40097871,recurring:31375465,projects:8722406,cogs:15483629,engSalary:11758531,toolsInfra:3725098,grossProfit:24614242,opex:17200605,da:1246119,sm:5586932,ga:3943716,tech:3407270,recruit:3016568,ebit:7413637,ebitda:8659756,interest:591003,tax:1595654,netProfit:5226980,capacity:829714,billable:688235,ar:1505803,cash:3160501,wip:481304,prepaid:165928,ap:738853,deferred:578743,accruedSal:781318,accruedLiab:278264,revLTM:14640301,bsDate:"Dec 2025",caption:"36 months, Jan 2023 &ndash; Dec 2025 &mdash; every figure ties out exactly."},
+    y2023:{lab:"FY2023",revenue:11833711,recurring:9230295,projects:2603416,cogs:4351909,engSalary:3357580,toolsInfra:994329,grossProfit:7481802,opex:5483061,da:355012,sm:1773225,ga:1251688,tech:1147381,recruit:955755,ebit:1998741,ebitda:2353753,interest:162131,tax:286904,netProfit:1549706,capacity:231430,billable:191776,ar:1180007,cash:2564767,wip:349426,prepaid:124132,ap:559608,deferred:439779,accruedSal:610757,accruedLiab:229600,revLTM:11833711,bsDate:"Dec 2023",caption:"Full year 2023 &mdash; P&amp;L for the year; working capital at Dec 2023."},
+    y2024:{lab:"FY2024",revenue:13623859,recurring:10785189,projects:2838670,cogs:5162385,engSalary:3923948,toolsInfra:1238437,grossProfit:8461474,opex:5828363,da:414814,sm:1877485,ga:1325283,tech:1106380,recruit:1104401,ebit:2633111,ebitda:3047925,interest:190724,tax:539220,netProfit:1903167,capacity:275715,billable:225960,ar:1434979,cash:3057483,wip:411439,prepaid:140973,ap:648942,deferred:570250,accruedSal:700224,accruedLiab:260030,revLTM:13623859,bsDate:"Dec 2024",caption:"Full year 2024 &mdash; P&amp;L for the year; working capital at Dec 2024."},
+    y2025:{lab:"FY2025",revenue:14640301,recurring:11359981,projects:3280320,cogs:5969335,engSalary:4477003,toolsInfra:1492332,grossProfit:8670966,opex:5889181,da:476293,sm:1936222,ga:1366745,tech:1153509,recruit:956412,ebit:2781785,ebitda:3258078,interest:238148,tax:769530,netProfit:1774107,capacity:322570,billable:270499,ar:1505803,cash:3160501,wip:481304,prepaid:165928,ap:738853,deferred:578743,accruedSal:781318,accruedLiab:278264,revLTM:14640301,bsDate:"Dec 2025",caption:"Full year 2025 &mdash; P&amp;L for the year; working capital at Dec 2025."}
+  };
+  var M=function(x){return "£"+(x/1e6).toFixed(2)+"M";};
+  var N=function(x){return Math.round(x).toLocaleString("en-GB");};
+  var P=function(x){return (x*100).toFixed(1)+"%";};
+  var H=function(x){return Math.round(x).toLocaleString("en-GB")+" hrs";};
+  var R=function(x){return "£"+x.toFixed(2)+"/hr";};
+  var D=function(x){return x.toFixed(1)+" days";};
+  var util=function(f){return f.billable/f.capacity;};
+  var eff=function(f){return f.revenue/f.billable;};
+  var gm=function(f){return f.grossProfit/f.revenue;};
+  var ebm=function(f){return f.ebitda/f.revenue;};
+  var npm=function(f){return f.netProfit/f.revenue;};
+  var recP=function(f){return f.recurring/f.revenue;};
+  var curA=function(f){return f.cash+f.ar+f.wip+f.prepaid;};
+  var curL=function(f){return f.ap+f.deferred+f.accruedSal+f.accruedLiab;};
+  var wc=function(f){return curA(f)-curL(f);};
+  var dsoF=function(f){return f.ar/f.revLTM*365;};
+  var gap=function(f){return Math.max(0,f.capacity*0.85-f.billable);};
+  var ups=function(f){return gap(f)*eff(f);};
+
+  var CAT={
+    delivery:{v:"var(--delivery)",label:"Delivery engine"},
+    income:{v:"var(--income)",label:"Income statement"},
+    asset:{v:"var(--asset)",label:"Working capital · asset"},
+    liability:{v:"var(--liability)",label:"Working capital · liability"},
+    metric:{v:"var(--metric)",label:"Ratio · the lever"},
+    equity:{v:"var(--delivery)",label:"Balance sheet · equity"}
+  };
+  var NODES=[
+    {id:"capacity",x:50,y:120,w:192,h:76,cat:"delivery",tier:"primary",label:"Capacity Hours",
+      plain:"The total hours your delivery teams could bill if every available hour were sold — the size of your engine. In a people business this is the raw material you turn into revenue: your engineers’ time.",
+      formula:"Headcount × working hours",
+      s:function(){return "Hours available";}, v:function(f){return H(f.capacity);}, c:function(f){return N(f.capacity)+" billable-capable hours across delivery.";}},
+    {id:"utilisation",x:50,y:250,w:192,h:76,cat:"metric",tier:"metric",label:"Utilisation",
+      plainf:function(f){return "The share of capacity that actually became billable work — the single biggest lever in the business. At "+P(util(f))+" against an 85% target, roughly "+N(gap(f))+" hours (~"+M(ups(f))+") of billable capacity sit unconverted.";},
+      formula:"Billable Hours ÷ Capacity Hours",
+      s:function(){return "% of capacity billed";}, v:function(f){return P(util(f));}, c:function(f){return N(f.billable)+" ÷ "+N(f.capacity)+" = "+P(util(f))+"  (target 85%)";}},
+    {id:"billable",x:50,y:380,w:192,h:76,cat:"delivery",tier:"primary",label:"Billable Hours",
+      plain:"The hours you can actually charge a client for — capacity that utilisation converted into sellable work. Everything above it in the P&L is built on this number.",
+      formula:"Capacity Hours × Utilisation",
+      s:function(){return "Hours you can invoice";}, v:function(f){return H(f.billable);}, c:function(f){return N(f.capacity)+" × "+P(util(f))+" = "+N(f.billable)+" hrs";}},
+    {id:"effRate",x:50,y:510,w:192,h:76,cat:"metric",tier:"metric",label:"Effective Rate",
+      plain:"The average revenue you earn per billable hour — list rates blended with any discounting and mix. It is the price side of the value equation; utilisation is the volume side. Move either and revenue moves.",
+      formula:"Revenue ÷ Billable Hours",
+      s:function(){return "Revenue per billable hr";}, v:function(f){return R(eff(f));}, c:function(f){return M(f.revenue)+" ÷ "+N(f.billable)+" = "+R(eff(f));}},
+    {id:"revenue",x:498,y:100,w:188,h:78,cat:"income",tier:"primary",label:"Revenue",
+      plain:"The total the firm earned in this period. Around 78% is recurring managed-services income — the predictable base that funds payroll every month — with the rest from projects and other income. It is billable hours priced out.",
+      formula:"Billable Hours × Effective Rate",
+      s:function(f){return "Top line · "+Math.round(recP(f)*100)+"% recurring";}, v:function(f){return M(f.revenue);}, c:function(f){return N(f.billable)+" × £"+eff(f).toFixed(2)+" = "+M(f.revenue)+"  ·  Recurring "+M(f.recurring)+", Projects & other "+M(f.projects);}},
+    {id:"cogs",x:498,y:228,w:188,h:72,cat:"income",tier:"primary",label:"Cost of Delivery",
+      plain:"The direct cost of delivering the service — mostly India-based engineer salaries, plus tools/RMM licences and connectivity. This is what you subtract from revenue to see how efficiently you deliver.",
+      formula:"Engineer salaries + Tools & licences + Connectivity",
+      s:function(){return "COGS";}, v:function(f){return M(f.cogs);}, c:function(f){return M(f.engSalary)+" engineers + "+M(f.toolsInfra)+" tools & infra = "+M(f.cogs);}},
+    {id:"grossProfit",x:498,y:344,w:188,h:72,cat:"income",tier:"primary",label:"Gross Profit",
+      plain:"What is left after the direct cost of delivery. For an MSP this is the cleanest read on delivery efficiency, and the number to watch weekly by service line.",
+      formula:"Revenue − Cost of Delivery",
+      s:function(f){return P(gm(f))+" margin";}, v:function(f){return M(f.grossProfit);}, c:function(f){return M(f.revenue)+" − "+M(f.cogs)+" = "+M(f.grossProfit)+"  ("+P(gm(f))+")";}},
+    {id:"opex",x:498,y:460,w:188,h:72,cat:"income",tier:"primary",label:"Operating Expenses",
+      plain:"The cost of running the business that is not tied to one client — sales & marketing, general & admin, technology & platform, recruitment, and D&A. Often called SG&A.",
+      formula:"S&M + G&A + Tech + Recruitment + D&A",
+      s:function(){return "Running the firm";}, v:function(f){return M(f.opex);}, c:function(f){return "S&M "+M(f.sm)+" + G&A "+M(f.ga)+" + Tech "+M(f.tech)+" + Recruit "+M(f.recruit)+" + D&A "+M(f.da)+" = "+M(f.opex);}},
+    {id:"da",x:712,y:560,w:158,h:58,cat:"income",tier:"supporting",label:"Depreciation & Amort.",
+      plain:"A non-cash expense spreading the cost of long-lived assets over their life. No cash leaves the bank the year it is booked — which is exactly why it is added back to reach EBITDA.",
+      formula:"Asset cost ÷ useful life",
+      s:function(){return "D&A · non-cash";}, v:function(f){return M(f.da);}, c:function(f){return M(f.da)+" expensed, sitting inside OpEx.";}},
+    {id:"ebit",x:498,y:576,w:188,h:72,cat:"income",tier:"primary",label:"EBIT",
+      plain:"Earnings Before Interest and Taxes — profit from core operations before financing and tax. It shows how the business performs regardless of how it is funded.",
+      formula:"Gross Profit − Operating Expenses",
+      s:function(){return "Operating profit";}, v:function(f){return M(f.ebit);}, c:function(f){return M(f.grossProfit)+" − "+M(f.opex)+" = "+M(f.ebit);}},
+    {id:"ebitda",x:712,y:430,w:168,h:72,cat:"income",tier:"primary",label:"EBITDA",
+      plain:"EBIT with D&A added back — a rough stand-in for the cash your operations throw off, and the number a buyer values the business on. Around a fifth of revenue here, top-quartile for an MSP.",
+      formula:"EBIT + D&A",
+      s:function(f){return P(ebm(f))+" · cash-ish";}, v:function(f){return M(f.ebitda);}, c:function(f){return M(f.ebit)+" + "+M(f.da)+" = "+M(f.ebitda)+"  ("+P(ebm(f))+")";}},
+    {id:"interest",x:322,y:712,w:150,h:56,cat:"income",tier:"supporting",label:"Interest",
+      plain:"The cost of borrowed money, paid to lenders. It sits below EBIT because it depends on how the business is financed, not how well it operates.",
+      formula:"Debt × interest rate",
+      s:function(){return "Cost of debt";}, v:function(f){return M(f.interest);}, c:function(f){return M(f.interest)+" of interest this period.";}},
+    {id:"tax",x:322,y:778,w:150,h:56,cat:"income",tier:"supporting",label:"Corporation Tax",
+      plain:"Tax owed on profit, taken out near the bottom to reach what you actually keep.",
+      formula:"Taxable profit × tax rate",
+      s:function(){return "On profit";}, v:function(f){return M(f.tax);}, c:function(f){return M(f.tax)+" of corporation tax.";}},
+    {id:"netProfit",x:486,y:706,w:212,h:90,cat:"income",tier:"hero",label:"Net Profit",
+      plain:"The bottom line — what the firm truly keeps after delivery, overhead, interest and tax. Low-teens percent of revenue, healthy for a managed-services business. Whatever isn’t paid out as dividends is retained and builds the owners’ equity on the balance sheet — the thread that links the P&L to the balance sheet.",
+      formula:"EBIT − Interest − Tax",
+      s:function(f){return "Bottom line · "+P(npm(f));}, v:function(f){return M(f.netProfit);}, c:function(f){return M(f.ebit)+" − "+M(f.interest)+" − "+M(f.tax)+" = "+M(f.netProfit)+"  ("+P(npm(f))+")";}},
+    {id:"ar",x:920,y:104,w:182,h:72,cat:"asset",tier:"primary",label:"Accounts Receivable",
+      plain:"Money clients owe you for work already billed but not yet paid. It is an asset — cash on its way — but every pound here is cash not yet in the bank.",
+      formula:"Unpaid client invoices (closing)",
+      s:function(){return "Owed by clients";}, v:function(f){return M(f.ar);}, c:function(f){return M(f.ar)+" awaiting collection.";}},
+    {id:"dso",x:1116,y:120,w:176,h:72,cat:"metric",tier:"metric",label:"DSO",
+      plain:"Days Sales Outstanding — the average time to collect after billing. Lower is better; in the healthy 30–45 band here, so cash comes in cleanly.",
+      formula:"(AR ÷ 12-mth Revenue) × 365",
+      s:function(){return "Collection speed";}, v:function(f){return D(dsoF(f));}, c:function(f){return "("+M(f.ar)+" ÷ "+M(f.revLTM)+") × 365 = "+D(dsoF(f));}},
+    {id:"cash",x:920,y:250,w:182,h:72,cat:"asset",tier:"primary",label:"Cash",
+      plain:"The actual money in the bank, available now. Profit is an opinion; cash is a fact — a profitable MSP can still fail if its cash is trapped in receivables or unbilled work.",
+      formula:"Opening cash + collections − outflows",
+      s:function(){return "In the bank";}, v:function(f){return M(f.cash);}, c:function(f){return M(f.cash)+" on hand at period close.";}},
+    {id:"wip",x:920,y:392,w:182,h:68,cat:"asset",tier:"primary",label:"Unbilled WIP",
+      plain:"Work you have delivered but not yet invoiced — value earned that has not even become a receivable. The faster it is billed, the faster it turns into cash.",
+      formula:"Delivered work not yet invoiced",
+      s:function(){return "Delivered, not billed";}, v:function(f){return M(f.wip);}, c:function(f){return M(f.wip)+" of delivered-but-unbilled work.";}},
+    {id:"deferred",x:920,y:520,w:182,h:64,cat:"liability",tier:"primary",label:"Deferred Revenue",
+      plain:"Cash clients paid in advance for service you have not delivered yet. It is a liability until you earn it — and a cash-flow gift while it lasts, classic for annual managed contracts.",
+      formula:"Advance billings not yet earned",
+      s:function(){return "Billed in advance";}, v:function(f){return M(f.deferred);}, c:function(f){return M(f.deferred)+" billed ahead of delivery.";}},
+    {id:"ap",x:920,y:628,w:182,h:64,cat:"liability",tier:"primary",label:"Accounts Payable",
+      plain:"Money you owe suppliers for tools, licences and connectivity you have used but not yet paid. A short-term liability — and free financing, since it lets you hold your cash longer.",
+      formula:"Unpaid supplier bills (closing)",
+      s:function(){return "Owed to suppliers";}, v:function(f){return M(f.ap);}, c:function(f){return M(f.ap)+" owed to suppliers.";}},
+    {id:"workingCap",x:1104,y:452,w:192,h:92,cat:"asset",tier:"hero",label:"Working Capital",
+      plain:"The cushion that funds day-to-day operations: what you own short-term minus what you owe short-term. Positive and healthy here, so the firm self-funds without reaching for cash.",
+      formula:"Current assets − Current liabilities",
+      s:function(){return "The cash cushion";}, v:function(f){return M(wc(f));}, c:function(f){return "(Cash "+M(f.cash)+" + AR "+M(f.ar)+" + WIP "+M(f.wip)+" + Prepaid "+M(f.prepaid)+") − (AP "+M(f.ap)+" + Deferred "+M(f.deferred)+" + Accrued "+M(f.accruedSal+f.accruedLiab)+") = "+M(wc(f));}},
+    {id:"assets",x:1350,y:150,w:278,h:84,cat:"asset",tier:"hero",label:"Total Assets",
+      plain:"Everything the firm owns short-term — cash, receivables, unbilled work and prepayments. The dataset holds current assets; fixed assets like equipment and property sit outside it.",
+      formula:"Cash + AR + WIP + Prepaid",
+      s:function(){return "What you own";}, v:function(f){return M(curA(f));}, c:function(f){return "Cash "+M(f.cash)+" + AR "+M(f.ar)+" + WIP "+M(f.wip)+" + Prepaid "+M(f.prepaid)+" = "+M(curA(f));}},
+    {id:"liabilities",x:1350,y:360,w:278,h:76,cat:"liability",tier:"primary",label:"Total Liabilities",
+      plain:"Everything the firm owes short-term — supplier bills, revenue billed in advance, and accrued salaries and costs. There is no long-term debt in this dataset.",
+      formula:"AP + Deferred + Accrued",
+      s:function(){return "What you owe";}, v:function(f){return M(curL(f));}, c:function(f){return "AP "+M(f.ap)+" + Deferred "+M(f.deferred)+" + Accrued "+M(f.accruedSal+f.accruedLiab)+" = "+M(curL(f));}},
+    {id:"equity",x:1350,y:558,w:278,h:92,cat:"equity",tier:"hero",label:"Equity",
+      plain:"The owners’ stake — what’s left once every liability is settled. Here it equals net current assets (your working capital), and it grows as the firm retains profit. Fixed assets, debt and share capital sit outside this dataset.",
+      formula:"Total Assets − Total Liabilities",
+      s:function(){return "Owners’ stake · net assets";}, v:function(f){return M(wc(f));}, c:function(f){return M(curA(f))+" − "+M(curL(f))+" = "+M(wc(f))+"  (= your working capital)";}}
+  ];
+  var EDGES=[
+    ["capacity","billable","× utilisation"],["utilisation","billable","sets % billable"],
+    ["billable","revenue","× rate"],["effRate","revenue","£/hr"],
+    ["revenue","grossProfit","top line"],["cogs","grossProfit","less delivery cost"],
+    ["grossProfit","ebit","operating profit"],["opex","ebit","less running costs"],
+    ["da","opex","sits in OpEx"],["ebit","ebitda","add D&A back"],["da","ebitda","added back"],
+    ["ebit","netProfit","operating profit"],["interest","netProfit","less interest"],["tax","netProfit","less tax"],
+    ["revenue","ar","billed to clients"],["ar","cash","when collected"],["revenue","dso","annual sales"],
+    ["ar","dso","money owed"],["wip","ar","when invoiced"],["cogs","ap","supplier bills"],
+    ["deferred","revenue","earned over time"],["cash","workingCap","current asset"],["ar","workingCap","current asset"],
+    ["wip","workingCap","current asset"],["ap","workingCap","less payables"],["deferred","workingCap","less deferred"],
+    ["cash","assets","current asset"],["ar","assets","current asset"],["wip","assets","current asset"],
+    ["ap","liabilities","current liability"],["deferred","liabilities","current liability"],
+    ["assets","equity","what you own"],["liabilities","equity","less what you owe"],
+    ["netProfit","equity","retained earnings"]
+  ];
+  var byId={}; NODES.forEach(function(n){byId[n.id]=n;});
+
+  var state={sel:null,scale:1,showVals:true,period:"all",tab:"explain",lens:"flow"};
+  var canvas=document.getElementById("canvas"),stage=document.getElementById("stage"),wrap=document.getElementById("wrap"),pad=document.getElementById("pad"),lenswrap=document.getElementById("lenswrap"),viewbar=document.getElementById("viewbar");
+  canvas.style.width=CW+"px"; canvas.style.height=CH+"px";
+
+  var BANDS=[
+    {x:18,y:64,w:272,h:786,c:"var(--delivery)",t:"The Delivery Engine",s:"Hours → billable → revenue",lx:34},
+    {x:304,y:64,w:582,h:786,c:"var(--income)",t:"The Income Statement",s:"What you earn vs. what you spend",lx:474},
+    {x:898,y:64,w:404,h:786,c:"var(--asset)",t:"Working Capital & Cash",s:"What you’re owed & what you owe",lx:918},
+    {x:1314,y:64,w:330,h:786,c:"var(--liability)",t:"The Balance Sheet",s:"What you own & who funds it",lx:1330}
+  ];
+  BANDS.forEach(function(b){
+    var d=document.createElement("div"); d.className="band";
+    d.style.cssText="left:"+b.x+"px;top:"+b.y+"px;width:"+b.w+"px;height:"+b.h+"px;border-color:color-mix(in srgb,"+b.c+" 24%,transparent);background:color-mix(in srgb,"+b.c+" 5%,transparent)";
+    canvas.appendChild(d);
+    var l=document.createElement("div"); l.className="zlabel"; l.style.cssText="left:"+b.lx+"px;top:28px";
+    l.innerHTML='<div class="zt" style="color:'+b.c+'">'+b.t+'</div><div class="zs">'+b.s+'</div>';
+    canvas.appendChild(l);
+  });
+
+  var SVGNS="http://www.w3.org/2000/svg";
+  var svg=document.createElementNS(SVGNS,"svg");
+  svg.setAttribute("class","edges"); svg.setAttribute("width",CW); svg.setAttribute("height",CH);
+  svg.setAttribute("viewBox","0 0 "+CW+" "+CH); svg.setAttribute("role","img");
+  svg.setAttribute("aria-label","Dependency map linking delivery hours, the profit and loss ladder, and working capital.");
+  var defs=document.createElementNS(SVGNS,"defs");
+  [["mk-def"],["mk-dim"],["mk-in"],["mk-out"]].forEach(function(m){
+    var mk=document.createElementNS(SVGNS,"marker");
+    mk.setAttribute("id",m[0]); mk.setAttribute("markerWidth","10"); mk.setAttribute("markerHeight","10");
+    mk.setAttribute("refX","7.4"); mk.setAttribute("refY","3"); mk.setAttribute("orient","auto"); mk.setAttribute("markerUnits","userSpaceOnUse");
+    var p=document.createElementNS(SVGNS,"path"); p.setAttribute("d","M0 0 L8 3 L0 6 Z"); mk.appendChild(p); defs.appendChild(mk);
+  });
+  svg.appendChild(defs);
+  var edgeLayer=document.createElementNS(SVGNS,"g"); svg.appendChild(edgeLayer); canvas.appendChild(svg);
+
+  var nodeEls={};
+  NODES.forEach(function(n){
+    var b=document.createElement("button"); b.type="button"; b.className="node";
+    b.setAttribute("data-cat",n.cat); b.setAttribute("data-tier",n.tier);
+    b.style.cssText="left:"+n.x+"px;top:"+n.y+"px;width:"+n.w+"px;height:"+n.h+"px";
+    b.innerHTML='<span class="n-label">'+n.label+'</span><span class="n-sub"></span><span class="n-val"></span>';
+    b.addEventListener("click",function(ev){ev.stopPropagation();select(n.id);});
+    canvas.appendChild(b); nodeEls[n.id]=b;
+  });
+
+  function anchor(n,side){ if(side==="l")return[n.x,n.y+n.h/2]; if(side==="r")return[n.x+n.w,n.y+n.h/2]; if(side==="t")return[n.x+n.w/2,n.y]; return[n.x+n.w/2,n.y+n.h]; }
+  function geom(a,b){
+    var scx=a.x+a.w/2,scy=a.y+a.h/2,tcx=b.x+b.w/2,tcy=b.y+b.h/2,dx=tcx-scx,dy=tcy-scy,s,t;
+    if(Math.abs(dx)>=Math.abs(dy)){s=dx>0?"r":"l";t=dx>0?"l":"r";}else{s=dy>0?"b":"t";t=dy>0?"t":"b";}
+    var p1=anchor(a,s),p2=anchor(b,t),x1=p1[0],y1=p1[1],x2=p2[0],y2=p2[1],c1x,c1y,c2x,c2y,k;
+    if(s==="r"||s==="l"){k=Math.max(46,Math.abs(x2-x1)*0.42);c1x=x1+(s==="r"?k:-k);c1y=y1;c2x=x2+(t==="l"?-k:k);c2y=y2;}
+    else{k=Math.max(46,Math.abs(y2-y1)*0.42);c1x=x1;c1y=y1+(s==="b"?k:-k);c2x=x2;c2y=y2+(t==="t"?-k:k);}
+    var mx=(x1+3*c1x+3*c2x+x2)/8,my=(y1+3*c1y+3*c2y+y2)/8;
+    return{d:"M "+x1+" "+y1+" C "+c1x+" "+c1y+" "+c2x+" "+c2y+" "+x2+" "+y2,mx:mx,my:my};
+  }
+
+  function select(id){ state.sel=(state.sel===id?null:id); render(); }
+  function clear(){ state.sel=null; render(); }
+
+  function render(){
+    for(var vi=0;vi<viewbar.children.length;vi++){ var vb=viewbar.children[vi]; vb.classList.toggle("on", vb.getAttribute("data-lens")===state.lens); }
+    if(state.lens==="flow"){ stage.style.display=""; lenswrap.style.display="none"; renderFlow(); }
+    else { stage.style.display="none"; lenswrap.style.display="block"; renderLens(); }
+  }
+  function renderFlow(){
+    var f=FIG[state.period];
+    var sel=state.sel, sources={}, targets={}, hasSrc=false, hasTgt=false;
+    if(sel){EDGES.forEach(function(e){if(e[1]===sel){sources[e[0]]=1;hasSrc=true;} if(e[0]===sel){targets[e[1]]=1;hasTgt=true;}});}
+    NODES.forEach(function(n){
+      var el=nodeEls[n.id];
+      el.querySelector(".n-sub").textContent=n.s(f);
+      var vEl=el.querySelector(".n-val"); vEl.textContent=n.v(f); vEl.style.display=state.showVals?"":"none";
+      el.classList.remove("active","source","target","dim");
+      if(sel){ if(n.id===sel)el.classList.add("active"); else if(sources[n.id])el.classList.add("source");
+        else if(targets[n.id])el.classList.add("target"); else el.classList.add("dim"); }
+      el.setAttribute("aria-pressed",n.id===sel?"true":"false");
+    });
+    while(edgeLayer.firstChild)edgeLayer.removeChild(edgeLayer.firstChild);
+    canvas.querySelectorAll(".elabel").forEach(function(x){x.remove();});
+    EDGES.forEach(function(e){
+      var a=byId[e[0]],b=byId[e[1]]; if(!a||!b)return;
+      var g=geom(a,b), p=document.createElementNS(SVGNS,"path"); p.setAttribute("d",g.d);
+      var cls="edge edge-base";
+      if(sel){ if(e[1]===sel)cls="edge edge-in"; else if(e[0]===sel)cls="edge edge-out"; else cls="edge edge-dim"; }
+      p.setAttribute("class",cls); edgeLayer.appendChild(p);
+      if(sel&&(e[0]===sel||e[1]===sel)&&e[2]){
+        var inc=(e[1]===sel), lb=document.createElement("div");
+        lb.className="elabel "+(inc?"in":"out"); lb.style.left=g.mx+"px"; lb.style.top=g.my+"px"; lb.textContent=e[2];
+        canvas.appendChild(lb);
+      }
+    });
+    renderAside(f,sel,sources,targets,hasSrc,hasTgt);
+  }
+
+  function chip(id,kind){ return '<button class="chip '+kind+'" data-go="'+id+'" type="button">'+byId[id].label+'</button>'; }
+
+  function renderAside(f,sel,sources,targets,hasSrc,hasTgt){
+    if(!sel){ pad.innerHTML=buildDefault(f); return; }
+    var n=byId[sel], c=CAT[n.cat], tab=state.tab;
+    var h='';
+    h+='<button class="back" data-go="" type="button">&larr; Back to overview</button>';
+    h+='<div class="tabrow"><div class="tabs"><button class="tab'+(tab==="explain"?" on":"")+'" data-tab="explain" type="button">Explain</button><button class="tab'+(tab==="insight"?" on":"")+'" data-tab="insight" type="button">Insight</button></div><span class="pchip">'+f.lab+'</span></div>';
+    h+='<div class="catrow"><span class="dot" style="background:'+c.v+'"></span><span class="ct">'+c.label+'</span></div>';
+    h+='<div class="s-label">'+n.label+'</div>';
+    h+='<div class="s-sub">'+n.s(f)+'</div>';
+    h+='<div class="s-val" style="color:'+c.v+'">'+n.v(f)+'</div>';
+    if(tab==="insight"){
+      h+=insightHTML(n);
+    } else {
+      h+='<p class="s-plain">'+(n.plainf?n.plainf(f):n.plain)+'</p>';
+      if(n.formula){
+        h+='<div class="chips-wrap"><div class="fbox-label">How it’s calculated</div><div class="fbox">'+n.formula+'</div>';
+        h+='<div class="fcalc">On your numbers ('+f.lab+'): <b>'+n.c(f)+'</b></div></div>';
+      }
+      var comes=Object.keys(sources).map(function(id){return chip(id,"in");}).join("");
+      var feeds=Object.keys(targets).map(function(id){return chip(id,"out");}).join("");
+      if(hasSrc)h+='<div class="chips-wrap"><div class="chips-label in">▼ Comes from</div><div class="chips">'+comes+'</div></div>';
+      if(hasTgt)h+='<div class="chips-wrap"><div class="chips-label out">▲ Feeds into</div><div class="chips">'+feeds+'</div></div>';
+    }
+    pad.innerHTML=h;
+  }
+
+  function row(label,num,cls){ return '<div class="row '+(cls||"")+'"><span>'+label+'</span><span class="n">'+num+'</span></div>'; }
+
+  function buildDefault(f){
+    return ''+
+    '<div class="a-eyebrow">How to read this map</div>'+
+    '<p class="a-p">Tap any term. Its <b class="in">inputs</b> — what it’s built from — light up green, and its <b class="out">results</b> — what it feeds — light up terracotta, with the link labelled. Use the <b>Period</b> switch, top right, for any single year.</p>'+
+    '<div class="legend">'+
+      '<div class="li"><span class="lline" style="border-color:var(--in)"></span> Comes from &mdash; an input</div>'+
+      '<div class="li"><span class="lline" style="border-color:var(--out)"></span> Feeds into &mdash; a result</div>'+
+    '</div>'+
+    '<div class="legend">'+
+      '<div class="li"><span class="ldot" style="background:var(--delivery)"></span> Delivery engine &mdash; hours &amp; rate</div>'+
+      '<div class="li"><span class="ldot" style="background:var(--income)"></span> Income statement &mdash; profit &amp; loss</div>'+
+      '<div class="li"><span class="ldot" style="background:var(--asset)"></span> Assets &mdash; cash &amp; what you’re owed</div>'+
+      '<div class="li"><span class="ldot" style="background:var(--liability)"></span> Liabilities &mdash; what you owe</div>'+
+    '</div>'+
+    '<hr class="rule">'+
+    '<div class="a-eyebrow">Your firm, in full &nbsp;·&nbsp; <span style="color:var(--ink)">'+f.lab+'</span></div>'+
+    '<p class="a-p muted" style="font-size:12.5px;margin-bottom:11px">'+f.caption+'</p>'+
+    '<div class="stmt"><h4>Income statement</h4>'+
+      row("Revenue",N(f.revenue))+
+      row("&minus; Cost of delivery","("+N(f.cogs)+")","minor")+
+      row("= Gross profit",N(f.grossProfit),"gp")+
+      row("&minus; Operating expenses","("+N(f.opex)+")","minor")+
+      row("= EBIT",N(f.ebit),"gp")+
+      row("+ D&amp;A → EBITDA",N(f.ebitda),"eb")+
+      row("&minus; Interest","("+N(f.interest)+")","minor")+
+      row("&minus; Corporation tax","("+N(f.tax)+")","minor")+
+      row("= Net profit",N(f.netProfit),"np")+
+    '</div>'+
+    '<div class="stmt"><h4>Working capital <span style="font-weight:400;color:var(--ink-3);font-size:11px">· '+f.bsDate+'</span></h4>'+
+      row("Current assets",N(curA(f)))+
+      row("&minus; Current liabilities","("+N(curL(f))+")","minor")+
+      row("= Working capital",N(wc(f)),"wc")+
+      row("DSO (collection speed)","≈ "+dsoF(f).toFixed(1)+" days","minor")+
+    '</div>'+
+    '<p class="hint">Income statement = period totals · working capital = period-end snapshot. Press <b>Esc</b> to reset.</p>';
+  }
+
+  var INSIGHTS={
+    capacity:{h:"Capacity scaled every year — 231k hrs (2023) to 323k hrs (2025), a ~40% larger delivery team.",w:"You’ve been hiring engineers alongside a growing client book.",l:"Capacity is a hiring decision — grow it in step with the sales pipeline. Too far ahead and you carry bench; behind and SLAs slip.",q:"How do you decide when to add delivery headcount?",a:"I watch utilisation by service line against the 85% target, plus the pipeline — a sustained hot line is the signal to hire, not a gut call."},
+    utilisation:{h:"Utilisation sits at ~83%, just under the 85% target and steady across the three years. The gap is ~£1M of billable capacity a year left on the table.",w:"Bench on newer hires, internal and admin time, and ramp — normal for a growing team, but a real two-point gap.",l:"Redeploy bench, tighten scheduling, and sell the under-utilised service lines. Every point of utilisation is roughly £0.5M of revenue.",q:"The team’s busy — why isn’t profit higher?",a:"Two reasons: we’re ~2 points under our utilisation target, and — the bigger one — our realised rate has slipped. Busy isn’t the same as billed at rate."},
+    billable:{h:"Billable hours grew from 192k to 270k, tracking capacity as the team scaled.",w:"More engineers at a steady ~83% utilisation means more billable hours.",l:"Billable hours are capacity × utilisation — grow either. Utilisation is the cheaper lever (no new payroll); hiring is the structural one.",q:"What’s the ceiling on billable hours without hiring?",a:"Capacity × the 85% target — about 705k hrs today vs 688k actual, so ~17k hrs of headroom before we’d need more people."},
+    effRate:{h:"This is the one to flag: effective rate has fallen every year — £61.71 to £60.29 to £54.12/hr, about a 12% drop — even as revenue grew.",w:"Rate erosion — discounting to win or retain, a mix shift to lower-rate work, or fixed-fee contracts absorbing scope creep. Volume hid it in the revenue line.",l:"Very controllable and commercial: tighten discounting, index contract rates to inflation, reprice fixed-fee overruns, and shift mix toward higher-rate services.",q:"Revenue’s up — what’s the concern?",a:"Revenue’s healthy, but realised rate slipped ~12% over three years. That’s margin leaking quietly under volume growth — I’d fix pricing and discounting before it compounds."},
+    revenue:{h:"Revenue grew steadily — £11.8M to £13.6M to £14.6M — and stayed ~78% recurring throughout.",w:"An expanding recurring managed-services base plus project work — high-quality, predictable income.",l:"Grow recurring revenue inside the existing book (expansion beats new logos), and protect rate so growth converts to margin.",q:"Is this growth good quality?",a:"Yes — 78% recurring makes it predictable and defensible. The watch-out isn’t the top line, it’s that realised rate is easing, so I’d make sure growth isn’t bought with discounts."},
+    cogs:{h:"Cost of delivery grew from £4.35M to £5.97M — slightly faster than revenue, which is why gross margin eased.",w:"Engineer salaries (India) are the bulk and rose with headcount; tools, licences and connectivity scaled too. FX (INR/GBP) quietly moves this line.",l:"Keep delivery-cost growth below revenue growth — offshore leverage, utilisation, and vendor/licence negotiation. Watch FX exposure.",q:"Why is delivery cost rising?",a:"Mostly headcount to serve growth — expected. The watch-out is it grew a touch faster than revenue, nudging gross margin down; that’s a rate and efficiency question, not ‘spend less’."},
+    grossProfit:{h:"Gross margin eroded three years running — 63.2% to 62.1% to 59.2%. Still healthy, but the trend is the story.",w:"Delivery cost grew faster than revenue, driven by the falling effective rate and rising inputs — not a one-off.",l:"Recover it on the revenue side (pricing, mix, discipline) more than the cost side — defend gross margin by service line, repricing the lines dragging the blend.",q:"Your margin’s slipping — should we worry?",a:"It’s ~4 points off over three years, still in the healthy 50–70% band, but direction matters. It traces to realised rate, so I’d fix pricing and mix before it settles below 60%."},
+    opex:{h:"Operating expenses were well controlled — £5.48M to £5.89M — growing far slower than revenue, so EBITDA margin actually rose.",w:"Sales, admin, tech and recruitment scaled sub-linearly — operating leverage as the firm grew.",l:"Keep opex growing slower than revenue. This discipline is what lifted EBITDA margin despite the gross-margin slip.",q:"Are costs under control?",a:"Overhead, yes — it grew much slower than revenue, which is why EBITDA margin reached ~22%. The cost pressure is in delivery, not overhead."},
+    da:{h:"D&A rose modestly (£0.36M to £0.48M) with investment in equipment and platform.",w:"It’s the spread cost of past capital investment — non-cash, so it doesn’t move the bank balance.",l:"Not an operational lever; it’s why EBITDA, which adds it back, is the cleaner read on operating cash.",q:"Why add D&A back for EBITDA?",a:"Because no cash leaves the bank when it’s booked — adding it back shows the cash the operation actually throws off."},
+    ebit:{h:"EBIT grew every year — £2.0M to £2.6M to £2.8M — as opex discipline outweighed the gross-margin slip.",w:"Operating leverage: revenue and gross profit grew while overhead grew slower.",l:"Hold both trends — defend gross margin and keep opex sub-linear.",q:"What’s driving operating profit?",a:"Operating leverage — revenue growing faster than overhead. The risk to it is the gross-margin trend, which is why I keep pointing back to rate."},
+    ebitda:{h:"EBITDA margin improved to ~22% (19.9% to 22.4% to 22.3%) — top-quartile for an MSP — even as gross margin fell.",w:"Overhead discipline (operating leverage) more than offset delivery-cost pressure.",l:"This is what a buyer values you on. Sustain it by protecting gross margin so it isn’t carried by overhead cuts alone.",q:"How profitable is the operation, really?",a:"~22% EBITDA margin, top-quartile for managed services. It’s improved on operating leverage — the caveat is it’s masking a gross-margin slip, so I’d shore up rate to keep it durable."},
+    interest:{h:"Interest rose (£0.16M to £0.24M) with borrowing to fund growth.",w:"It’s the cost of the debt financing the business — driven by how it’s funded, not how it operates.",l:"A treasury decision, not operational — manage debt level and rate. It sits below EBIT for exactly that reason.",q:"Does the debt worry you?",a:"It’s modest against £8.7M of EBITDA — comfortable coverage. It’s a financing choice, separate from operating performance."},
+    tax:{h:"Corporation tax rose with profits (£0.29M to £0.77M), and the effective rate stepped up in 2025.",w:"More taxable profit means more tax; 2025 also carried a higher effective rate.",l:"Managed through tax planning, not operations — worth checking the 2025 step-up with finance.",q:"Why did tax jump in 2025?",a:"Higher taxable profit plus a higher effective rate — I’d confirm whether any reliefs or timing explain the step-up."},
+    netProfit:{h:"Net profit grew then dipped — £1.55M to £1.90M to £1.77M — with 2025 softer despite higher revenue.",w:"2025’s gross-margin slip plus higher interest and tax pulled the bottom line down even as revenue rose.",l:"Defend it upstream — the net dip is really the rate and gross-margin story flowing all the way down, plus financing cost.",q:"Revenue’s up but net profit dipped in 2025 — why?",a:"It’s the margin story reaching the bottom line: rate and gross margin eased, and interest and tax rose. Fix rate upstream and net follows."},
+    ar:{h:"Receivables grew with revenue (£1.18M to £1.51M), broadly in proportion — collection stayed healthy.",w:"More billing means more outstanding invoices; the ratio to revenue held, so no deterioration.",l:"Control via billing cadence and collections follow-up; watch AR-to-revenue and DSO for early warning.",q:"Is money getting stuck in receivables?",a:"No — AR grew in line with revenue and DSO held ~37 days, well inside the healthy band. It’s scaling, not slipping."},
+    dso:{h:"DSO held steady around 36–38 days all three years — comfortably in the healthy 30–45 MSP band.",w:"Billing and collections kept pace with growth; no cadence slippage.",l:"Keep it there with disciplined invoicing (bill on delivery) and a 30-day chase. Every day of DSO is roughly £40k of cash.",q:"How’s your cash collection?",a:"Strong and stable — ~37 days. If it started climbing I’d act before it hit the bank; today it’s a non-issue."},
+    cash:{h:"Cash grew steadily to £3.16M — the firm is accumulating, not burning.",w:"Profitable operations plus healthy collections and advance billing generate cash.",l:"Protected by DSO discipline and advance billing; the risk is cash trapped in AR or WIP, currently well controlled.",q:"Is the business cash-generative?",a:"Yes — cash has grown every year to £3.16M on healthy margins and collections. Profit is converting to cash, which is the real test."},
+    wip:{h:"Unbilled WIP is small (£0.48M) against revenue — you invoice close to delivery.",w:"Tight billing cadence keeps delivered-but-unbilled work low, so value converts to cash quickly.",l:"Keep WIP low by billing milestones promptly; rising WIP is an early sign of billing lag before it even reaches AR.",q:"How much delivered work is sitting un-invoiced?",a:"Very little — ~£0.48M. We bill close to delivery, so cash isn’t trapped upstream of the invoice."},
+    deferred:{h:"Deferred revenue (~£0.58M) reflects clients pre-paying for managed contracts — a cash-flow positive.",w:"Annual or advance billing on recurring contracts collects cash before the service is delivered.",l:"Grow it deliberately by billing recurring contracts annually up front — it’s free working-capital financing.",q:"Why is deferred revenue a good thing?",a:"It’s cash already collected for service we’ll deliver later — a liability on paper, but a real cash-flow gift and a sign of a healthy recurring book."},
+    ap:{h:"Payables (£0.74M) grew modestly with the cost base — a normal, useful source of short-term funding.",w:"Standard supplier terms on tools, licences and connectivity let you hold cash a little longer.",l:"Manage payment terms sensibly — stretching too far risks supplier goodwill. A minor, healthy lever here.",q:"Any concern on what you owe suppliers?",a:"No — small and stable, and it’s effectively free financing. No liquidity concern against £3.16M of cash."},
+    workingCap:{h:"Working capital is healthy and growing — £2.38M to £2.87M to £2.94M — the firm self-funds comfortably.",w:"Short-term assets (cash, AR, WIP) outpace liabilities (AP, deferred, accruals) by a wide, growing margin.",l:"Protected by the whole cash cycle — keep DSO low, WIP billed, and lean on deferred and AP for float. It’s the buffer that funds growth without external cash.",q:"Can the business fund its own growth?",a:"Yes — £2.94M of positive working capital and rising. It funds operations and growth without reaching for cash, exactly what you want."},
+    assets:{h:"Total assets grew from £4.22M (2023) to £5.31M as cash and receivables built with the business.",w:"More revenue means more cash and receivables; the asset base scales with the book. It’s a light, liquid balance sheet — no heavy fixed assets, normal for a people-based MSP.",l:"Keep assets productive — cash earning, receivables collected fast (low DSO), WIP billed quickly. Idle assets are a drag.",q:"What do we actually own?",a:"£5.31M of liquid assets, mostly cash and receivables. There’s no big fixed-asset base — for an MSP the real value is in contracts and people, not equipment."},
+    liabilities:{h:"Liabilities are modest and stable (~£2.38M) — supplier bills, deferred revenue and accrued costs, with no long-term debt in view.",w:"They scale gently with the cost base; deferred revenue (advance billing) is a healthy chunk of it.",l:"Managed through payment terms and billing cadence — and deferred revenue is a good liability to grow, since it’s pre-collected cash.",q:"How much does the business owe?",a:"About £2.38M, all short-term, and no long-term debt in this view — comfortably covered by £5.31M of assets. Some of it is deferred revenue, which is actually cash we’ve already collected."},
+    equity:{h:"Equity (net assets) has grown from £2.38M to £2.94M as the firm retains profit — worth more each year, funded entirely by its own operations.",w:"Each year’s retained profit that isn’t distributed builds equity; with no debt, the owners’ stake is the full net-asset value. It equals your working capital.",l:"Grow it by retaining profit and keeping the cash cycle tight. It’s the buffer that funds growth without external money.",q:"Is the business building value for its owners?",a:"Yes — equity has grown every year to £2.94M, debt-free, funded by retained profit. That’s real owner value. Note this is net current assets; a full equity picture would add share capital and fixed assets."}
+  };
+  function insightHTML(n){
+    var x=INSIGHTS[n.id];
+    var base = x ? (''+
+      '<div class="ins-block"><div class="ins-label hap">What’s happening</div><p class="ins-p">'+x.h+'</p></div>'+
+      '<div class="ins-block"><div class="ins-label why">Why it’s happening</div><p class="ins-p">'+x.w+'</p></div>'+
+      '<div class="ins-block"><div class="ins-label lev">How to control it</div><p class="ins-p">'+x.l+'</p></div>'+
+      '<div class="ins-qa"><div class="ins-qa-h">If a stakeholder asks</div><div class="ins-q">“'+x.q+'”</div><div class="ins-a">'+x.a+'</div></div>')
+      : '<p class="s-plain muted">No specific insight for this item yet.</p>';
+    return base + miniFor(n.id);
+  }
+
+  // ---- dimensional data (service / client / region), per period, pulled live ----
+  var DIM={"svc":{"all":[{"code":"HD","name":"Helpdesk 24x7","cat":"Managed Support","rev":10052041,"cogs":3702938,"bill":236228,"cap":272492,"tgt":0.64,"rate0":22.0},{"code":"SOC","name":"Security Ops (SOC)","cat":"Security","rev":6654029,"cogs":2393579,"bill":81847,"cap":105176,"tgt":0.66,"rate0":42.0},{"code":"NOC","name":"Network Ops (NOC)","cat":"Managed Support","rev":6140693,"cogs":2264817,"bill":113137,"cap":136641,"tgt":0.63,"rate0":28.0},{"code":"CLD","name":"Azure Cloud","cat":"Cloud","rev":6060965,"cogs":2476825,"bill":65016,"cap":81910,"tgt":0.61,"rate0":48.0},{"code":"DEV","name":"Software Development","cat":"Engineering","rev":4643101,"cogs":2101149,"bill":53050,"cap":67402,"tgt":0.55,"rate0":45.0},{"code":"OFP","name":"Office Professionals","cat":"Business Support","rev":3309406,"cogs":1335582,"bill":106814,"cap":125542,"tgt":0.6,"rate0":16.0},{"code":"AUT","name":"Automation","cat":"Engineering","rev":3237636,"cogs":1208738,"bill":32144,"cap":40553,"tgt":0.64,"rate0":52.0}],"y2023":[{"code":"HD","name":"Helpdesk 24x7","cat":"Managed Support","rev":2792889,"cogs":985580,"bill":62510,"cap":72431,"tgt":0.64,"rate0":22.0},{"code":"SOC","name":"Security Ops (SOC)","cat":"Security","rev":2078810,"cogs":686674,"bill":24371,"cap":30831,"tgt":0.66,"rate0":42.0},{"code":"CLD","name":"Azure Cloud","cat":"Cloud","rev":1813211,"cogs":731929,"bill":18600,"cap":22872,"tgt":0.61,"rate0":48.0},{"code":"NOC","name":"Network Ops (NOC)","cat":"Managed Support","rev":1712800,"cogs":577724,"bill":30121,"cap":35774,"tgt":0.63,"rate0":28.0},{"code":"DEV","name":"Software Development","cat":"Engineering","rev":1538446,"cogs":664786,"bill":16834,"cap":21396,"tgt":0.55,"rate0":45.0},{"code":"OFP","name":"Office Professionals","cat":"Business Support","rev":1003126,"cogs":401031,"bill":30871,"cap":37342,"tgt":0.6,"rate0":16.0},{"code":"AUT","name":"Automation","cat":"Engineering","rev":894429,"cogs":304185,"bill":8470,"cap":10784,"tgt":0.64,"rate0":52.0}],"y2024":[{"code":"HD","name":"Helpdesk 24x7","cat":"Managed Support","rev":3413428,"cogs":1260335,"bill":77609,"cap":90770,"tgt":0.64,"rate0":22.0},{"code":"NOC","name":"Network Ops (NOC)","cat":"Managed Support","rev":2218100,"cogs":811543,"bill":39625,"cap":48880,"tgt":0.63,"rate0":28.0},{"code":"CLD","name":"Azure Cloud","cat":"Cloud","rev":2167149,"cogs":855145,"bill":22583,"cap":29685,"tgt":0.61,"rate0":48.0},{"code":"SOC","name":"Security Ops (SOC)","cat":"Security","rev":2046396,"cogs":721329,"bill":24372,"cap":31316,"tgt":0.66,"rate0":42.0},{"code":"DEV","name":"Software Development","cat":"Engineering","rev":1557419,"cogs":679343,"bill":17312,"cap":22132,"tgt":0.55,"rate0":45.0},{"code":"AUT","name":"Automation","cat":"Engineering","rev":1154401,"cogs":439287,"bill":11104,"cap":14274,"tgt":0.64,"rate0":52.0},{"code":"OFP","name":"Office Professionals","cat":"Business Support","rev":1066967,"cogs":395403,"bill":33356,"cap":38658,"tgt":0.6,"rate0":16.0}],"y2025":[{"code":"HD","name":"Helpdesk 24x7","cat":"Managed Support","rev":3845725,"cogs":1457023,"bill":96110,"cap":109291,"tgt":0.64,"rate0":22.0},{"code":"SOC","name":"Security Ops (SOC)","cat":"Security","rev":2528823,"cogs":985576,"bill":33104,"cap":43029,"tgt":0.66,"rate0":42.0},{"code":"NOC","name":"Network Ops (NOC)","cat":"Managed Support","rev":2209794,"cogs":875550,"bill":43392,"cap":51987,"tgt":0.63,"rate0":28.0},{"code":"CLD","name":"Azure Cloud","cat":"Cloud","rev":2080605,"cogs":889751,"bill":23832,"cap":29353,"tgt":0.61,"rate0":48.0},{"code":"DEV","name":"Software Development","cat":"Engineering","rev":1547237,"cogs":757020,"bill":18904,"cap":23874,"tgt":0.55,"rate0":45.0},{"code":"OFP","name":"Office Professionals","cat":"Business Support","rev":1239313,"cogs":539148,"bill":42587,"cap":49542,"tgt":0.6,"rate0":16.0},{"code":"AUT","name":"Automation","cat":"Engineering","rev":1188806,"cogs":465266,"bill":12570,"cap":15495,"tgt":0.64,"rate0":52.0}]},"client":{"all":[{"name":"Northwind Managed IT","tier":"Strategic","region":"UK","rev":6608985,"cogs":2562613},{"name":"Ironclad Networks","tier":"Strategic","region":"US","rev":5754116,"cogs":2143677},{"name":"Helix Cloud Services","tier":"Strategic","region":"UK","rev":5638995,"cogs":2164389},{"name":"Aegis Technology Group","tier":"Strategic","region":"Europe","rev":4685375,"cogs":1786389},{"name":"Vertex Digital","tier":"Growth","region":"US","rev":2973445,"cogs":1202346},{"name":"Meridian IT Partners","tier":"Growth","region":"UK","rev":2624586,"cogs":1015328},{"name":"Quanta Infocare","tier":"Growth","region":"APAC","rev":2529370,"cogs":961855},{"name":"BlueHarbor Systems","tier":"Growth","region":"UK","rev":2513754,"cogs":1016102},{"name":"Cumulus MSP","tier":"Growth","region":"Europe","rev":2175417,"cogs":844755},{"name":"Unassigned","tier":"—","region":"Unassigned","rev":1273268,"cogs":507066},{"name":"Solstice Managed Svcs","tier":"Smb","region":"APAC","rev":1170253,"cogs":442173},{"name":"Pinnacle Support Co","tier":"Smb","region":"UK","rev":1161288,"cogs":448854},{"name":"Orbit Technology","tier":"Smb","region":"Europe","rev":989018,"cogs":388081}],"y2023":[{"name":"Northwind Managed IT","tier":"Strategic","region":"UK","rev":1832616,"cogs":689765},{"name":"Ironclad Networks","tier":"Strategic","region":"US","rev":1660349,"cogs":604720},{"name":"Helix Cloud Services","tier":"Strategic","region":"UK","rev":1640799,"cogs":574417},{"name":"Aegis Technology Group","tier":"Strategic","region":"Europe","rev":1523925,"cogs":532182},{"name":"Vertex Digital","tier":"Growth","region":"US","rev":913042,"cogs":344979},{"name":"Cumulus MSP","tier":"Growth","region":"Europe","rev":761945,"cogs":298619},{"name":"BlueHarbor Systems","tier":"Growth","region":"UK","rev":752053,"cogs":287122},{"name":"Meridian IT Partners","tier":"Growth","region":"UK","rev":716695,"cogs":260886},{"name":"Quanta Infocare","tier":"Growth","region":"APAC","rev":704506,"cogs":256204},{"name":"Solstice Managed Svcs","tier":"Smb","region":"APAC","rev":401830,"cogs":146868},{"name":"Orbit Technology","tier":"Smb","region":"Europe","rev":325338,"cogs":125593},{"name":"Pinnacle Support Co","tier":"Smb","region":"UK","rev":323913,"cogs":119132},{"name":"Unassigned","tier":"—","region":"Unassigned","rev":276701,"cogs":111421}],"y2024":[{"name":"Northwind Managed IT","tier":"Strategic","region":"UK","rev":2467610,"cogs":945998},{"name":"Ironclad Networks","tier":"Strategic","region":"US","rev":1995634,"cogs":709927},{"name":"Helix Cloud Services","tier":"Strategic","region":"UK","rev":1722261,"cogs":642362},{"name":"Aegis Technology Group","tier":"Strategic","region":"Europe","rev":1500026,"cogs":572233},{"name":"Meridian IT Partners","tier":"Growth","region":"UK","rev":941833,"cogs":346841},{"name":"Vertex Digital","tier":"Growth","region":"US","rev":929938,"cogs":390573},{"name":"Cumulus MSP","tier":"Growth","region":"Europe","rev":861321,"cogs":322198},{"name":"BlueHarbor Systems","tier":"Growth","region":"UK","rev":828670,"cogs":344049},{"name":"Quanta Infocare","tier":"Growth","region":"APAC","rev":793218,"cogs":288804},{"name":"Unassigned","tier":"—","region":"Unassigned","rev":461085,"cogs":179424},{"name":"Pinnacle Support Co","tier":"Smb","region":"UK","rev":401919,"cogs":151627},{"name":"Solstice Managed Svcs","tier":"Smb","region":"APAC","rev":392159,"cogs":143328},{"name":"Orbit Technology","tier":"Smb","region":"Europe","rev":328187,"cogs":125022}],"y2025":[{"name":"Northwind Managed IT","tier":"Strategic","region":"UK","rev":2308759,"cogs":926850},{"name":"Helix Cloud Services","tier":"Strategic","region":"UK","rev":2275936,"cogs":947609},{"name":"Ironclad Networks","tier":"Strategic","region":"US","rev":2098134,"cogs":829030},{"name":"Aegis Technology Group","tier":"Strategic","region":"Europe","rev":1661425,"cogs":681974},{"name":"Vertex Digital","tier":"Growth","region":"US","rev":1130465,"cogs":466794},{"name":"Quanta Infocare","tier":"Growth","region":"APAC","rev":1031646,"cogs":416847},{"name":"Meridian IT Partners","tier":"Growth","region":"UK","rev":966059,"cogs":407601},{"name":"BlueHarbor Systems","tier":"Growth","region":"UK","rev":933031,"cogs":384932},{"name":"Cumulus MSP","tier":"Growth","region":"Europe","rev":552150,"cogs":223938},{"name":"Unassigned","tier":"—","region":"Unassigned","rev":535483,"cogs":216222},{"name":"Pinnacle Support Co","tier":"Smb","region":"UK","rev":435456,"cogs":178095},{"name":"Solstice Managed Svcs","tier":"Smb","region":"APAC","rev":376265,"cogs":151977},{"name":"Orbit Technology","tier":"Smb","region":"Europe","rev":335493,"cogs":137466}]},"region":{"all":[{"name":"UK","rev":18547608,"cogs":7207286},{"name":"US","rev":8727562,"cogs":3346023},{"name":"Europe","rev":7849810,"cogs":3019225},{"name":"APAC","rev":3699623,"cogs":1404028},{"name":"Unassigned","rev":1273268,"cogs":507066}],"y2023":[{"name":"UK","rev":5266076,"cogs":1931322},{"name":"Europe","rev":2611207,"cogs":956395},{"name":"US","rev":2573391,"cogs":949699},{"name":"APAC","rev":1106336,"cogs":403073},{"name":"Unassigned","rev":276701,"cogs":111421}],"y2024":[{"name":"UK","rev":6362291,"cogs":2430876},{"name":"US","rev":2925572,"cogs":1100500},{"name":"Europe","rev":2689534,"cogs":1019453},{"name":"APAC","rev":1185377,"cogs":432132},{"name":"Unassigned","rev":461085,"cogs":179424}],"y2025":[{"name":"UK","rev":6919240,"cogs":2845087},{"name":"US","rev":3228599,"cogs":1295824},{"name":"Europe","rev":2549068,"cogs":1043378},{"name":"APAC","rev":1407911,"cogs":568823},{"name":"Unassigned","rev":535483,"cogs":216222}]}};
+  var LENS={flow:"Value Flow",svc:"Service Lines",client:"Clients",region:"Regions"};
+  var LENS_TITLE={svc:"Service Lines — where margin lives",client:"Clients — concentration &amp; profit",region:"Regions — the geographic mix"};
+  var LENS_QA={
+    svc:{blurb:"Service line is where margin is really made or lost. The managed-support lines (Helpdesk, NOC) are the high-utilisation core; the engineering and cloud lines carry higher rates but thinner or under-target margins — and they’re what’s dragging the blended 61%.",q:"Where is our margin actually coming from — and where is it leaking?",a:"The managed-support lines are the stable core; the leak is engineering and cloud — Software Development is the thinnest at ~55% and Cloud is a couple of points under target. I’d reprice and tighten scope there, and sell more Security Ops, which is high-value but under-utilised."},
+    client:{blurb:"The client book is healthy but concentrated: four Strategic accounts are ~57% of revenue and the top one is ~16.5%. Margins are broadly even, so the story here is concentration risk, not profitability.",q:"How exposed are we to any one client?",a:"Our top four are ~57% of revenue and all Strategic tier; the largest is ~16.5% — more than our net margin. It’s healthy today, but I’d de-risk deliberately: multi-year contracts, QBRs, multiple contacts, and growing the mid-tier."},
+    region:{blurb:"The book is UK-led (~46%) with a healthy US, European and APAC spread. Margins are even across all regions, so geography drives diversification and currency exposure rather than profitability.",q:"Does our geographic mix create any risk?",a:"We’re ~46% UK, well diversified beyond that, and margins are even everywhere — so no margin risk by region. The real exposure is FX: we bill in GBP/USD but deliver from India in INR, so I watch the currency, not the mix."}
+  };
+  function dMargin(x){return x.rev?(x.rev-x.cogs)/x.rev:0;}
+  function dUtil(x){return x.cap?x.bill/x.cap:0;}
+  function dRate(x){return x.bill?x.rev/x.bill:0;}
+  function totRev(a){var t=0;for(var i=0;i<a.length;i++)t+=a[i].rev;return t;}
+  function keyOf(dim,x){return dim==="svc"?x.code:x.name;}
+  function sortc(a,f){return a.slice().sort(f);}
+  function statEl(k,v){return '<div class="stat"><div class="k">'+k+'</div><div class="v">'+v+'</div></div>';}
+
+  function renderLens(){
+    if(state.lens==="bs"){ renderBS(); return; }
+    if(state.lens==="pnl"){ renderPL(); return; }
+    var dim=state.lens, p=state.period, arr=DIM[dim][p], tot=totRev(arr), maxr=0, i;
+    for(i=0;i<arr.length;i++) if(arr[i].rev>maxr) maxr=arr[i].rev;
+    var rows=""; for(i=0;i<arr.length;i++) rows+=lensRow(dim,arr[i],maxr,tot);
+    lenswrap.innerHTML='<div class="lens-inner"><div class="lens-h">'+LENS_TITLE[dim]+'</div>'
+      +'<div class="lens-sub">Ranked by revenue · '+FIG[p].lab+' · tap any row for its insight &amp; lever</div>'
+      +'<div class="lens-banner">'+lensBanner(dim,arr,tot)+'</div>'+rows+'</div>';
+    var sel=null; if(state.sel!=null){ for(i=0;i<arr.length;i++){ if(keyOf(dim,arr[i])===state.sel){ sel=arr[i]; break; } } }
+    pad.innerHTML = sel ? lensItemAside(dim,sel,tot) : lensOverviewAside(dim,arr,tot);
+  }
+  function lensRow(dim,x,maxr,tot){
+    var share=x.rev/tot, w=Math.max(3,x.rev/maxr*100), m=dMargin(x), meta="";
+    if(dim==="svc"){ var u=dUtil(x);
+      meta='<span class="ltag">'+x.cat+'</span><span class="lchip '+(u>=0.85?"good":(u<0.80?"watch":"neut"))+'">'+Math.round(u*100)+'% util</span><span class="lchip '+(m>=x.tgt?"good":"watch")+'">'+Math.round(m*100)+'% margin</span>';
+    } else if(dim==="client"){
+      meta='<span class="ltag">'+x.tier+'</span><span class="ltag">'+x.region+'</span><span class="lchip '+(share>=0.12?"watch":"neut")+'">'+(share*100).toFixed(1)+'% of rev</span><span class="lchip '+(m>=0.61?"good":"watch")+'">'+Math.round(m*100)+'% margin</span>';
+    } else {
+      meta='<span class="lchip neut">'+(share*100).toFixed(1)+'% of rev</span><span class="lchip '+(m>=0.61?"good":"watch")+'">'+Math.round(m*100)+'% margin</span>';
+    }
+    return '<button class="lrow'+(keyOf(dim,x)===state.sel?" on":"")+'" data-key="'+keyOf(dim,x)+'" type="button"><div class="lrow-top"><span class="lrow-name">'+x.name+'</span><span class="lrow-rev">'+(state.showVals?M(x.rev):"")+'</span></div><div class="lrow-bar"><span class="lrow-fill" style="width:'+w+'%"></span></div><div class="lrow-meta">'+meta+'</div></button>';
+  }
+  function lensBanner(dim,arr,tot){
+    var i;
+    if(dim==="svc"){ var work=arr[0],lowU=arr[0],lowM=arr[0];
+      for(i=0;i<arr.length;i++){ if(dUtil(arr[i])<dUtil(lowU))lowU=arr[i]; if(dMargin(arr[i])<dMargin(lowM))lowM=arr[i]; }
+      return '<b>'+work.name+'</b> is the workhorse ('+M(work.rev)+', '+Math.round(dUtil(work)*100)+'% utilised). <b>'+lowU.name+'</b> is the most under-utilised at '+Math.round(dUtil(lowU)*100)+'% — spare capacity in a '+R(dRate(lowU))+' line, the cheapest growth you have. <b>'+lowM.name+'</b> is the thinnest margin at '+Math.round(dMargin(lowM)*100)+'%, dragging the blend.';
+    }
+    if(dim==="client"){ var real=[]; for(i=0;i<arr.length;i++) if(arr[i].name!=="Unassigned") real.push(arr[i]);
+      var s4=0; for(i=0;i<Math.min(4,real.length);i++) s4+=real[i].rev; s4=s4/tot; var big=arr[0];
+      return 'Top 4 clients are <b>'+Math.round(s4*100)+'%</b> of revenue — '+big.name+' alone is <b>'+(big.rev/tot*100).toFixed(1)+'%</b>. Concentration is the biggest risk here: protect the majors and grow the mid-tier to dilute it.';
+    }
+    var uk=null; for(i=0;i<arr.length;i++) if(arr[i].name==="UK") uk=arr[i]; var uks=uk?uk.rev/tot:0;
+    return 'The book is <b>'+Math.round(uks*100)+'% UK</b>, then US, Europe and APAC. Margins are even (~60–62%) across regions, so region is a <b>diversification and FX</b> story — not where margin is won or lost.';
+  }
+  function lensOverviewAside(dim,arr,tot){
+    var qa=LENS_QA[dim];
+    return '<div class="a-eyebrow">'+LENS[dim]+' &nbsp;·&nbsp; <span style="color:var(--ink)">'+FIG[state.period].lab+'</span></div><p class="a-p">'+qa.blurb+'</p><div class="ins-qa"><div class="ins-qa-h">If a stakeholder asks</div><div class="ins-q">“'+qa.q+'”</div><div class="ins-a">'+qa.a+'</div></div><p class="hint" style="margin-top:16px">Tap any row on the left for its detail, insight and lever.</p>';
+  }
+  function lensItemAside(dim,x,tot){
+    var share=x.rev/tot, m=dMargin(x);
+    var dot=(dim==="svc")?"var(--income)":(dim==="client")?"var(--asset)":"var(--delivery)";
+    var catlab=(dim==="svc")?("Service line · "+x.cat):(dim==="client")?("Client · "+x.tier+" · "+x.region):"Region";
+    var h='<button class="back" data-lensback="1" type="button">&larr; Back to '+LENS[dim].toLowerCase()+'</button>';
+    h+='<div class="catrow"><span class="dot" style="background:'+dot+'"></span><span class="ct">'+catlab+'</span><span class="pchip">'+FIG[state.period].lab+'</span></div>';
+    h+='<div class="s-label">'+x.name+'</div><div class="s-sub">'+(share*100).toFixed(1)+'% of revenue</div><div class="s-val" style="color:'+dot+'">'+M(x.rev)+'</div>';
+    h+='<div class="statline">'+statEl("Gross margin",Math.round(m*100)+"%");
+    if(dim==="svc"){ h+=statEl("Utilisation",Math.round(dUtil(x)*100)+"%")+statEl("Eff. rate",R(dRate(x)))+statEl("Target GM",Math.round(x.tgt*100)+"%"); }
+    else if(dim==="client"){ h+=statEl("Tier",x.tier)+statEl("Region",x.region); }
+    h+='</div>';
+    var ins=itemInsight(dim,x,share,m);
+    h+='<div class="ins-block"><div class="ins-label hap">What’s happening</div><p class="ins-p">'+ins.h+'</p></div>';
+    h+='<div class="ins-block"><div class="ins-label lev">The lever</div><p class="ins-p">'+ins.l+'</p></div>';
+    h+='<div class="ins-qa"><div class="ins-qa-h">If a stakeholder asks</div><div class="ins-q">“'+ins.q+'”</div><div class="ins-a">'+ins.a+'</div></div>';
+    return h;
+  }
+  function itemInsight(dim,x,share,m){
+    if(dim==="svc"){ var u=dUtil(x),rate=dRate(x),under=u<0.80,below=m<x.tgt-0.005;
+      var h=x.name+" earns "+M(x.rev)+" at "+Math.round(m*100)+"% margin and "+Math.round(u*100)+"% utilisation, realised at "+R(rate)+".";
+      if(under) return {h:h,l:"It’s under-utilised — filling that spare capacity is high-margin revenue from people you already employ. Point sales here before hiring elsewhere.",q:"We have the "+x.name+" team — are we using them?",a:"Not fully — it runs at "+Math.round(u*100)+"%, under the 85% target, and it’s a "+R(rate)+" line. That spare capacity is our cheapest growth."};
+      if(below) return {h:h,l:"Margin is about "+Math.round((x.tgt-m)*100)+"pp under its "+Math.round(x.tgt*100)+"% target — reprice or tighten scope and delivered hours to close it.",q:"Why is "+x.name+" below plan?",a:"It’s roughly "+Math.round((x.tgt-m)*100)+" points under its "+Math.round(x.tgt*100)+"% target — usually rate erosion or scope creep. I’d review pricing and delivered hours."};
+      return {h:h,l:"It’s at or above target and well loaded — protect it: hold rate and keep the team utilised.",q:"How is "+x.name+" doing?",a:"Solidly — "+Math.round(m*100)+"% margin at "+Math.round(u*100)+"% utilisation, on or above target. Part of the core."};
+    }
+    if(dim==="client"){ var big=share>=0.12,thin=m<0.58;
+      var h=x.name+" ("+x.tier+", "+x.region+") is "+M(x.rev)+" — "+(share*100).toFixed(1)+"% of revenue at "+Math.round(m*100)+"% margin.";
+      if(big) return {h:h,l:"Protect it hard — multi-year terms, quarterly business reviews, multiple contacts — and grow the mid-tier so the book leans on it less.",q:"What happens if "+x.name+" leaves?",a:"At "+(share*100).toFixed(1)+"% of revenue it’s bigger than our net margin, so it would hurt. That’s why I’d lock it in and never let it rest on one relationship."};
+      if(thin) return {h:h,l:"A big-but-thin account — target it for repricing at renewal or a delivery-efficiency review.",q:"Is "+x.name+" as good as it looks?",a:"Sizeable, but the margin’s below our average — I’d treat renewal as a repricing opportunity, not just a rollover."};
+      return {h:h,l:"A healthy, balanced account — nurture it and look for expansion, which is cheaper than winning new logos.",q:"Where’s the growth in "+x.name+"?",a:"It’s a solid "+Math.round(m*100)+"% account — I’d expand services into it rather than chase new logos."};
+    }
+    var h=x.name+" is "+M(x.rev)+" — "+(share*100).toFixed(1)+"% of the book at "+Math.round(m*100)+"% margin, in line with the firm.";
+    return {h:h,l:"Region is a diversification and FX lever, not a margin one — "+(x.name==="UK"?"the book is UK-led, so growing US and APAC adds balance.":"growing this region diversifies away from the UK concentration."),q:"Should we push harder in "+x.name+"?",a:"Margins are even across regions, so it’s a balance-and-FX call, not a profitability one. "+(x.name==="UK"?"We’re already ~46% UK, so I’d diversify.":"More here would helpfully diversify the UK-heavy book.")};
+  }
+  function miniBars(title,items,valFn,fmtFn,colFn){
+    var mx=0,i; for(i=0;i<items.length;i++){ var v=valFn(items[i]); if(v>mx)mx=v; }
+    var rows=""; for(i=0;i<items.length;i++){ var x=items[i],v=valFn(x),w=Math.max(3,v/mx*100);
+      rows+='<div class="mbar"><span class="mbar-l">'+x.name+'</span><span class="mbar-t"><span class="mbar-f" style="width:'+w+'%;background:'+colFn(x)+'"></span></span><span class="mbar-v">'+fmtFn(x)+'</span></div>'; }
+    return '<div class="mini"><div class="mini-h">'+title+'</div>'+rows+'</div>';
+  }
+  function miniFor(id){
+    var p=state.period;
+    if(id==="revenue") return miniBars("Revenue by region", DIM.region[p], function(x){return x.rev;}, function(x){return M(x.rev);}, function(){return "var(--accent)";});
+    if(id==="grossProfit"||id==="cogs") return miniBars("Gross margin by service line", sortc(DIM.svc[p],function(a,b){return dMargin(b)-dMargin(a);}), dMargin, function(x){return Math.round(dMargin(x)*100)+"%";}, function(x){return dMargin(x)>=x.tgt?"var(--in)":"var(--out)";});
+    if(id==="utilisation"||id==="billable"||id==="capacity") return miniBars("Utilisation by service line", sortc(DIM.svc[p],function(a,b){return dUtil(b)-dUtil(a);}), dUtil, function(x){return Math.round(dUtil(x)*100)+"%";}, function(x){return dUtil(x)>=0.85?"var(--in)":(dUtil(x)<0.80?"var(--out)":"var(--metric)");});
+    if(id==="effRate") return miniBars("Effective rate by service line", sortc(DIM.svc[p],function(a,b){return dRate(b)-dRate(a);}), dRate, function(x){return R(dRate(x));}, function(){return "var(--asset)";});
+    return "";
+  }
+
+  // ---- Balance Sheet lens (working-capital balance sheet: Assets = Liabilities + Equity) ----
+  var BS_DATA={
+    all:{a:[["Cash",3160501],["Accounts Receivable",1505803],["Unbilled WIP",481304],["Prepaid Expenses",165928]],l:[["Accounts Payable",738853],["Accrued Salaries",781318],["Deferred Revenue",578743],["Accrued Liabilities",278264]]},
+    y2023:{a:[["Cash",2564767],["Accounts Receivable",1180007],["Unbilled WIP",349426],["Prepaid Expenses",124132]],l:[["Accounts Payable",559608],["Accrued Salaries",610757],["Deferred Revenue",439779],["Accrued Liabilities",229600]]},
+    y2024:{a:[["Cash",3057483],["Accounts Receivable",1434979],["Unbilled WIP",411439],["Prepaid Expenses",140973]],l:[["Accounts Payable",648942],["Accrued Salaries",700224],["Deferred Revenue",570250],["Accrued Liabilities",260030]]},
+    y2025:{a:[["Cash",3160501],["Accounts Receivable",1505803],["Unbilled WIP",481304],["Prepaid Expenses",165928]],l:[["Accounts Payable",738853],["Accrued Salaries",781318],["Deferred Revenue",578743],["Accrued Liabilities",278264]]}
+  };
+  function sumv(a){var t=0;for(var i=0;i<a.length;i++)t+=a[i][1];return t;}
+  function renderBS(){
+    var p=state.period, b=BS_DATA[p], totA=sumv(b.a), totL=sumv(b.l), eq=totA-totL, i;
+    var eqPct=eq/totA*100, liPct=totL/totA*100, cr=(totA/totL).toFixed(1), lab=FIG[p].lab, dt=FIG[p].bsDate;
+    var viz='<div class="bsviz">'
+      +'<div class="bscol"><div class="bscol-h">What you own</div><div class="bsbar"><div class="bsseg" style="height:100%;background:var(--asset)"><span class="sn">ASSETS</span><span class="sv">'+M(totA)+'</span></div></div><div class="bscol-t">'+M(totA)+'</div></div>'
+      +'<div class="bseq">=</div>'
+      +'<div class="bscol"><div class="bscol-h">Who funds it</div><div class="bsbar">'
+        +'<div class="bsseg" style="height:'+eqPct+'%;background:var(--delivery)"><span class="sn">EQUITY</span><span class="sv">'+M(eq)+'</span></div>'
+        +'<div class="bsseg" style="height:'+liPct+'%;background:var(--liability)"><span class="sn">LIABILITIES</span><span class="sv">'+M(totL)+'</span></div>'
+      +'</div><div class="bscol-t">'+M(totA)+'</div></div></div>';
+    var arows=""; for(i=0;i<b.a.length;i++) arows+=row(b.a[i][0],M(b.a[i][1])); arows+=row("= Total Assets",M(totA),"tot");
+    var lrows=""; for(i=0;i<b.l.length;i++) lrows+=row(b.l[i][0],M(b.l[i][1])); lrows+=row("= Total Liabilities",M(totL),"tot");
+    var banner='A healthy, self-funding balance sheet: <b>'+M(totA)+'</b> of liquid assets against just <b>'+M(totL)+'</b> of short-term obligations — a current ratio of <b>'+cr+'×</b> — leaving <b>'+M(eq)+'</b> of equity. No long-term debt sits in this view; the firm funds itself from working capital.';
+    lenswrap.innerHTML='<div class="lens-inner">'
+      +'<div class="lens-h">Balance Sheet — what you own &amp; who funds it</div>'
+      +'<div class="lens-sub">Period-end snapshot · '+lab+' · '+dt+' · Assets = Liabilities + Equity</div>'
+      +'<div class="lens-banner">'+banner+'</div>'+viz
+      +'<div class="stmt"><h4 style="color:var(--asset-val)">Assets — what you own</h4>'+arows+'</div>'
+      +'<div class="stmt"><h4 style="color:var(--liability-val)">Liabilities — what you owe</h4>'+lrows+'</div>'
+      +'<div class="stmt"><h4 style="color:var(--delivery-val)">Equity — owners’ stake (net assets)</h4>'+row("= Equity (Assets − Liabilities)",M(eq),"tot")+'</div>'
+      +'<div class="bsident">'+M(totA)+' Assets &nbsp;=&nbsp; '+M(totL)+' Liabilities &nbsp;+&nbsp; '+M(eq)+' Equity &nbsp;<span class="ok">✓ balances</span></div>'
+      +'<p class="hint">This is the working-capital balance sheet the model holds — current assets and current liabilities. Fixed assets, long-term debt and share capital sit outside the dataset, so Equity here is net current assets.</p></div>';
+    pad.innerHTML='<div class="a-eyebrow">Balance Sheet &nbsp;·&nbsp; <span style="color:var(--ink)">'+lab+'</span></div>'
+      +'<p class="a-p">The firm holds <b>'+M(totA)+'</b> of assets, funded by <b>'+M(totL)+'</b> of liabilities and <b>'+M(eq)+'</b> of equity. A current ratio of <b>'+cr+'×</b> (assets ÷ liabilities) is strong — it comfortably self-funds.</p>'
+      +'<div class="statline">'+statEl("Total assets",M(totA))+statEl("Liabilities",M(totL))+statEl("Equity",M(eq))+statEl("Current ratio",cr+"×")+'</div>'
+      +'<div class="ins-block"><div class="ins-label hap">What’s happening</div><p class="ins-p">Equity (net assets) has grown from £2.38M in 2023 to £2.94M as retained profit builds — the firm is worth more each year and carries no long-term debt in this view.</p></div>'
+      +'<div class="ins-qa"><div class="ins-qa-h">If a stakeholder asks</div><div class="ins-q">“Is the balance sheet healthy?”</div><div class="ins-a">Very — a '+cr+'× current ratio, '+M(eq)+' of equity and no long-term debt in view, so it funds its own growth. The one caveat I’d flag is that this is a working-capital balance sheet; I’d add a fixed-asset and debt register for the full picture.</div></div>'
+      +'<p class="hint" style="margin-top:14px">Equity = net current assets (Assets − Liabilities). Fixed assets, debt and share capital aren’t in this dataset.</p>';
+  }
+
+  // ---- P&L lens (line-item waterfall + plan-target achievement) ----
+  var TARGETS={
+    all:{revenue:42101000,EBITDA:9574000,netProfit:6143000},
+    y2023:{revenue:11901000,EBITDA:2152000,netProfit:1381000},
+    y2024:{revenue:14000000,EBITDA:3175000,netProfit:1876000},
+    y2025:{revenue:16200000,EBITDA:4247000,netProfit:2886000}
+  };
+  function pnlSteps(f){return [
+    {k:"Recurring revenue",v:f.recurring,t:"in"},
+    {k:"Projects & other",v:f.projects,t:"in"},
+    {k:"Revenue",v:f.revenue,t:"sub",tgt:"revenue"},
+    {k:"Engineer salaries (India)",v:-f.engSalary,t:"out"},
+    {k:"Tools, licences & infra",v:-f.toolsInfra,t:"out"},
+    {k:"Gross Profit",v:f.grossProfit,t:"sub",m:gm(f)},
+    {k:"Sales & marketing",v:-f.sm,t:"out"},
+    {k:"General & admin",v:-f.ga,t:"out"},
+    {k:"Technology & platform",v:-f.tech,t:"out"},
+    {k:"Recruitment & training",v:-f.recruit,t:"out"},
+    {k:"EBITDA",v:f.ebitda,t:"sub",tgt:"EBITDA",m:ebm(f)},
+    {k:"Depreciation & amort.",v:-f.da,t:"out"},
+    {k:"EBIT",v:f.ebit,t:"sub"},
+    {k:"Interest",v:-f.interest,t:"out"},
+    {k:"Corporation tax",v:-f.tax,t:"out"},
+    {k:"Net Profit",v:f.netProfit,t:"sub",tgt:"netProfit",m:npm(f)}
+  ];}
+  var PL_STORY="The plan grew more ambitious every year — revenue targets rose £11.9M → £14.0M → £16.2M. In 2023 the firm beat plan (EBITDA 109%, net 112%); by 2025 it fell well short (EBITDA 77%, net 61%) as delivery grew slower than the plan and margins eased. Switch the period, top-right, to watch it move.";
+  var PL_QA="Early on, yes — we beat plan in 2023. But the targets ramped faster than delivery, so 2025 came in light: revenue 90%, EBITDA 77% and net profit 61% of plan. The gap traces to the margin and rate erosion — the plan assumed margins would hold, and they slipped.";
+  function renderPL(){
+    var p=state.period, f=FIG[p], t=TARGETS[p], steps=pnlSteps(f), scaleMax=Math.max(f.revenue,t.revenue), cum=0, rows="", i;
+    for(i=0;i<steps.length;i++){
+      var s=steps[i], left, w, col;
+      if(s.t==="sub"){ left=0; w=s.v/scaleMax*100; cum=s.v; col="var(--delivery)"; }
+      else { var nc=cum+s.v; left=Math.min(cum,nc)/scaleMax*100; w=Math.abs(s.v)/scaleMax*100; cum=nc; col=(s.t==="in")?"var(--asset)":"var(--out)"; }
+      var lab=s.k+(s.m!=null?' · '+Math.round(s.m*100)+'%':'');
+      var tick=""; if(s.tgt){ var tx=t[s.tgt]/scaleMax*100; tick='<div class="wf-tick" style="left:'+tx+'%"></div>'; }
+      var val=(s.t==="out"?"−":"")+M(Math.abs(s.v)), chip="";
+      if(s.tgt){ var ach=s.v/t[s.tgt]*100, hit=ach>=100; chip='<span class="wf-chip '+(hit?"hit":"miss")+'">'+Math.round(ach)+'% '+(hit?"▲":"▼")+'</span>'; }
+      rows+='<div class="wfrow'+(s.t==="sub"?" sub":"")+'"><div class="wf-l">'+lab+'</div>'
+        +'<div class="wf-track"><div class="wf-bar" style="left:'+left+'%;width:'+w+'%;background:'+col+'"></div>'+tick+'</div>'
+        +'<div class="wf-v">'+val+chip+'</div></div>';
+    }
+    var rP=f.revenue/t.revenue, eP=f.ebitda/t.EBITDA, nP=f.netProfit/t.netProfit;
+    var verdict=nP>=1?"The firm beat its bottom-line plan.":nP>=0.9?"Just shy of the bottom-line plan.":"A clear miss on the bottom-line plan — worth understanding why.";
+    var banner='Revenue landed at <b>'+M(f.revenue)+'</b> — '+Math.round(rP*100)+'% of the '+M(t.revenue)+' plan — flowing down to <b>'+M(f.ebitda)+'</b> EBITDA ('+Math.round(eP*100)+'% of plan) and <b>'+M(f.netProfit)+'</b> net profit ('+Math.round(nP*100)+'% of plan). '+verdict;
+    lenswrap.innerHTML='<div class="lens-inner"><div class="lens-h">Profit &amp; Loss — how revenue becomes profit</div>'
+      +'<div class="lens-sub">Waterfall · '+FIG[p].lab+' · each line’s contribution, with plan targets</div>'
+      +'<div class="lens-banner">'+banner+'</div><div class="wf">'+rows+'</div>'
+      +'<p class="hint">Green = money in · terracotta = costs out · gold = subtotals. The thin <b>│</b> tick and % chip show actual vs plan on Revenue, EBITDA and Net Profit.</p></div>';
+    pad.innerHTML='<div class="a-eyebrow">Profit &amp; Loss · <span style="color:var(--ink)">'+FIG[p].lab+'</span></div>'
+      +'<p class="a-p">The waterfall walks every line from revenue down to net profit — so you can see exactly which items build the result and which erode it, and how each headline metric tracks its plan.</p>'
+      +'<div class="statline">'+statEl("Revenue vs plan",Math.round(rP*100)+"%")+statEl("EBITDA vs plan",Math.round(eP*100)+"%")+statEl("Net vs plan",Math.round(nP*100)+"%")+'</div>'
+      +'<div class="ins-block"><div class="ins-label hap">What’s happening</div><p class="ins-p">'+PL_STORY+'</p></div>'
+      +'<div class="ins-qa"><div class="ins-qa-h">If a stakeholder asks</div><div class="ins-q">“Are we hitting plan?”</div><div class="ins-a">'+PL_QA+'</div></div>';
+  }
+
+  pad.addEventListener("click",function(ev){
+    var lb=ev.target.closest("[data-lensback]"); if(lb){ state.sel=null; render(); return; }
+    var tb=ev.target.closest("[data-tab]"); if(tb){ state.tab=tb.getAttribute("data-tab"); render(); return; }
+    var t=ev.target.closest("[data-go]"); if(!t)return;
+    var id=t.getAttribute("data-go"); if(id==="")clear(); else select(id);
+  });
+  lenswrap.addEventListener("click",function(ev){
+    var r=ev.target.closest(".lrow"); if(!r)return;
+    var k=r.getAttribute("data-key"); state.sel=(state.sel===k?null:k); render();
+  });
+  viewbar.addEventListener("click",function(ev){
+    var b=ev.target.closest(".viewtab"); if(!b)return;
+    state.lens=b.getAttribute("data-lens"); state.sel=null; state.tab="explain"; render();
+  });
+  wrap.addEventListener("click",function(ev){ if(ev.target===wrap||ev.target===stage||ev.target===canvas||ev.target===svg)clear(); });
+  document.getElementById("btnReset").addEventListener("click",clear);
+  document.getElementById("btnFig").addEventListener("click",function(){
+    state.showVals=!state.showVals; this.textContent=state.showVals?"Hide figures":"Show figures"; render();
+  });
+  document.getElementById("seg").addEventListener("click",function(ev){
+    var b=ev.target.closest(".seg"); if(!b)return;
+    state.period=b.getAttribute("data-p");
+    var kids=this.children; for(var i=0;i<kids.length;i++){ kids[i].classList.toggle("on",kids[i]===b); }
+    render();
+  });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape")clear(); });
+
+  function fit(){
+    var avail=wrap.clientWidth-32;
+    var s=Math.max(0.5,Math.min(1,avail/CW));
+    state.scale=s; stage.style.width=(CW*s)+"px"; stage.style.height=(CH*s)+"px"; canvas.style.transform="scale("+s+")";
+  }
+  if(typeof ResizeObserver!=="undefined"){ new ResizeObserver(fit).observe(wrap); } else { window.addEventListener("resize",fit); }
+  fit(); render();
+})();
+</script>
+</body>
+</html>

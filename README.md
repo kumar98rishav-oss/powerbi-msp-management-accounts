@@ -37,6 +37,14 @@ An interactive **dependency map** of the whole model — trace a single billable
 
 ### ▶ **[Open the interactive value map »](https://kumar98rishav-oss.github.io/powerbi-msp-management-accounts/value-map.html)**
 
+<div align="center">
+
+| Value Flow | Service / Client breakdowns | Per-figure insight |
+|:---:|:---:|:---:|
+| ![Value Flow](screenshots/map-flow.png) | ![Breakdowns](screenshots/map-breakdown.png) | ![Insight](screenshots/map-insight.png) |
+
+</div>
+
 Six linked views on the same synthetic figures:
 
 **Value Flow** · **Service Lines** · **Clients** · **Regions** · **P&L** *(waterfall vs plan)* · **Balance Sheet** *(Assets = Liabilities + Equity)*
